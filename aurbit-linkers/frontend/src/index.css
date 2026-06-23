@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-cream text-ink font-sans antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display;
+  }
+
+  :focus-visible {
+    outline: 2px solid #C9974A;
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  .eyebrow {
+    @apply text-xs font-semibold tracking-[0.18em] uppercase text-gold-600;
+  }
+
+  .container-page {
+    @apply max-w-7xl mx-auto px-6 lg:px-10;
+  }
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Subtle link-node ambient background, used behind hero */
+.node-field {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+}
