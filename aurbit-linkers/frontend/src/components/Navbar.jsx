@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronDown, Search, Gift, Menu, X, User, LogOut } from 'lucide-react';
+import { ChevronDown, Search, Gift, Menu, X, User, LogOut, ChevronRight } from 'lucide-react';
 import Logo from './Logo';
 import { useServices } from '../context/ServicesContext';
 import { useAuth } from '../context/AuthContext';
@@ -150,18 +150,24 @@ export default function Navbar({ onServiceClick }) {
 
                 {isOpen && cat.items?.length > 0 && (
                   <div
-                    className="absolute left-0 top-full mt-1 bg-white border border-navy-100 rounded-xl shadow-soft p-5 grid gap-x-10 gap-y-2.5 z-50"
+                    className="absolute left-0 top-full mt-1 bg-white border border-gold-500/18 rounded-2xl p-5 grid gap-x-10 gap-y-2.5 z-50"
                     style={{
                       gridTemplateColumns: `repeat(${Math.min(3, Math.ceil(cat.items.length / 6))}, minmax(200px, 1fr))`,
+                      boxShadow: '0 2px 8px rgba(10, 26, 60, 0.04), 0 16px 40px -12px rgba(201, 151, 74, 0.22), 0 30px 70px -24px rgba(10, 26, 60, 0.16)',
                     }}
                   >
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-gold-500/[0.05] to-transparent pointer-events-none" style={{ height: '40%', top: 0, left: 0, right: 0 }}></div>
                     {cat.items.map((item) => (
                       <button
                         key={item.slug}
                         onClick={() => handleItemClick(item, cat.label)}
-                        className="text-left text-[14.5px] text-slate-muted hover:text-gold-600 transition-colors py-0.5 whitespace-nowrap"
+                        className="group relative text-left text-[14.5px] text-slate-muted hover:text-gold-600 transition-all duration-280 ease-[cubic-bezier(0.34,1.4,0.64,1)] py-0.5 pl-6 pr-2 rounded-md whitespace-nowrap hover:bg-gradient-to-r hover:from-gold-500/[0.12] hover:to-gold-500/[0.02]"
                       >
-                        {item.name}
+                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-gold-500 rounded-full transition-all duration-280 ease-[cubic-bezier(0.34,1.4,0.64,1)] group-hover:h-full group-hover:top-0 group-hover:translate-y-0"></span>
+                        <span className="absolute left-1 top-1/2 -translate-y-1/2 opacity-0 -translate-x-2 transition-all duration-280 ease-[cubic-bezier(0.34,1.4,0.64,1)] group-hover:opacity-100 group-hover:translate-x-0">
+                          <ChevronRight size={14} className="text-gold-500" />
+                        </span>
+                        <span className="relative z-10 transition-all duration-280 ease-[cubic-bezier(0.34,1.4,0.64,1)] group-hover:translate-x-1.5">{item.name}</span>
                       </button>
                     ))}
                   </div>
@@ -228,9 +234,13 @@ export default function Navbar({ onServiceClick }) {
                         <button
                           key={item.slug}
                           onClick={() => handleItemClick(item, cat.label)}
-                          className="text-left text-sm text-slate-muted py-1"
+                          className="group relative text-left text-sm text-slate-muted hover:text-gold-600 transition-all duration-280 ease-[cubic-bezier(0.34,1.4,0.64,1)] py-1 pl-7 pr-2 rounded-md hover:bg-gradient-to-r hover:from-gold-500/[0.12] hover:to-gold-500/[0.02]"
                         >
-                          {item.name}
+                          <span className="absolute left-1 top-1/2 -translate-y-1/2 w-1 h-0 bg-gold-500 rounded-full transition-all duration-280 ease-[cubic-bezier(0.34,1.4,0.64,1)] group-hover:h-[calc(100%-8px)] group-hover:top-1/2 group-hover:-translate-y-1/2"></span>
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 opacity-0 -translate-x-2 transition-all duration-280 ease-[cubic-bezier(0.34,1.4,0.64,1)] group-hover:opacity-100 group-hover:translate-x-0">
+                            <ChevronRight size={13} className="text-gold-500" />
+                          </span>
+                          <span className="relative z-10 transition-all duration-280 ease-[cubic-bezier(0.34,1.4,0.64,1)] group-hover:translate-x-1.5">{item.name}</span>
                         </button>
                       ))}
                     </div>
