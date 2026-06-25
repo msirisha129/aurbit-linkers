@@ -13,17 +13,20 @@ import Dashboard from './pages/Dashboard';
 import ServiceDetail from './pages/ServiceDetail';
 import IcegateDetails from './pages/IcegateDetails';
 import AdminDashboard from './pages/AdminDashboard';
+import Users from './pages/Users';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import AdminLeads from './pages/AdminLeads';
-import AdminLogin from './pages/AdminLogin';
 import StaticPage from './pages/StaticPage';
 import IcegateLanding from './pages/IcegateLanding';
+import Settings from './pages/Settings';
+import PaymentSuccess from './pages/PaymentSuccess';
 
 function App() {
   const [modalOpen, setModalOpen] = useState(false);
   const [activeService, setActiveService] = useState(null);
   const location = useLocation();
-
-  const hideChrome = location.pathname === '/login' || location.pathname === '/signup';
+ const hideChrome = ['/login', '/signup'].includes(location.pathname);
 
   function openLeadModal(service = null) {
     console.log('App.openLeadModal -> service:', service);
@@ -42,6 +45,9 @@ function App() {
             element={<Home onGetStarted={() => openLeadModal(null)} onLearnMore={(card) => openLeadModal({ name: card.name, slug: card.key, category: card.name })} />}
           />
           <Route path="/login" element={<Login />} />
+         <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/signup" element={<Signup />} />
           <Route
             path="/dashboard"
@@ -52,11 +58,44 @@ function App() {
             }
           />
           <Route path="/service/icegate-registration" element={<IcegateDetails onEnquire={openLeadModal} />} />
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/leads" element={<AdminLeads />} />
+          <Route
+  path="/admin"
+  element={
+    <ProtectedRoute adminOnly>
+      <AdminDashboard />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/admin/leads"
+  element={
+    <ProtectedRoute adminOnly>
+      <AdminLeads />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/admin/users"
+  element={
+    <ProtectedRoute adminOnly>
+      <Users />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/admin/settings"
+  element={
+    <ProtectedRoute adminOnly>
+      <Settings />
+    </ProtectedRoute>
+  }
+/>
           <Route path="/service/:slug" element={<ServiceDetail onEnquire={openLeadModal} />} />
           <Route path="/icegate" element={<IcegateLanding />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
 
           {/* Footer / static informational pages */}
           <Route path="/about" element={<StaticPage title="About Aurbit Linkers" />} />
@@ -70,7 +109,6 @@ function App() {
           <Route path="/refund-policy" element={<StaticPage title="Refund Policy" />} />
           <Route path="/confidentiality" element={<StaticPage title="Confidentiality Policy" />} />
           <Route path="/disclaimer" element={<StaticPage title="Disclaimer Policy" />} />
-          <Route path="/careers" element={<StaticPage title="We're Hiring" />} />
           <Route path="/refer" element={<StaticPage title="Refer & Earn" />} />
 
           <Route

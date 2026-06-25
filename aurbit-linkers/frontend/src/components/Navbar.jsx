@@ -44,6 +44,85 @@ export default function Navbar({ onServiceClick }) {
     onServiceClick({ name: item.name, slug: item.slug, category: categoryLabel });
   }
 
+  function handleLogout() {
+    logout();
+    setMobileOpen(false);
+    navigate('/');
+  }
+
+  // Single source of truth for the role-based action button.
+  // - guest  -> Login
+  // - user   -> Dashboard (/dashboard)
+  // - admin  -> Admin Panel (/admin) and never Dashboard
+  function renderAuthAction(className = '') {
+    if (!user) {
+      return (
+        <Link
+          to="/login"
+          className={`px-5 py-2.5 rounded-full border border-navy-800 text-navy-800 text-sm font-semibold hover:bg-navy-800 hover:text-white transition-colors ${className}`}
+        >
+          Login
+        </Link>
+      );
+    }
+
+    if (user.role === 'admin') {
+      return (
+        <Link
+          to="/admin"
+          className={`px-3 py-2 rounded-md text-[15px] font-medium text-navy-700 hover:text-navy-900 whitespace-nowrap ${className}`}
+        >
+          Admin Panel
+        </Link>
+      );
+    }
+
+    return (
+      <Link
+        to="/dashboard"
+        className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full border border-navy-200 text-navy-800 text-sm font-semibold hover:bg-navy-50 transition-colors ${className}`}
+      >
+        <User size={15} /> Dashboard
+      </Link>
+    );
+  }
+
+  // Profile/avatar pill (name + icon). Only rendered for logged-in users.
+  function renderProfile() {
+    if (!user) return null;
+    const firstName = user.name?.split(' ')[0] || 'Profile';
+    return (
+      <span className="hidden lg:inline-flex items-center gap-1.5 text-sm font-medium text-navy-700">
+        <User size={15} /> {firstName}
+      </span>
+    );
+  }
+
+  function renderLogoutIcon() {
+    if (!user) return null;
+    return (
+      <button
+        onClick={handleLogout}
+        aria-label="Log out"
+        className="p-2.5 rounded-full text-navy-500 hover:bg-navy-50 hover:text-navy-800 transition-colors"
+      >
+        <LogOut size={17} />
+      </button>
+    );
+  }
+
+  function renderLogoutButtonMobile() {
+    if (!user) return null;
+    return (
+      <button
+        onClick={handleLogout}
+        className="w-full text-left px-4 py-2 rounded-md border text-sm"
+      >
+        Logout
+      </button>
+    );
+  }
+
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-navy-100">
       <div className="container-page flex items-center justify-between h-[72px]">
@@ -52,7 +131,7 @@ export default function Navbar({ onServiceClick }) {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden lg:flex items-center gap-1" onMouseLeave={closeWithDelay}>
+        <nav className="hidden lg:flex items-center gap-0.5" onMouseLeave={closeWithDelay}>
           {NAV_ORDER.map((key) => {
             const cat = byKey[key];
             if (!cat) return null;
@@ -60,13 +139,13 @@ export default function Navbar({ onServiceClick }) {
             return (
               <div key={key} className="relative" onMouseEnter={() => openWithDelay(key)}>
                 <button
-                  className={`flex items-center gap-1 px-3.5 py-2 text-[15px] font-medium rounded-md transition-colors ${
+                  className={`flex items-center gap-1 px-3 py-2 text-[15px] font-medium rounded-md transition-all whitespace-nowrap ${
                     isOpen ? 'text-navy-800 bg-navy-50' : 'text-navy-700 hover:text-navy-900 hover:bg-navy-50'
                   }`}
                   aria-expanded={isOpen}
                 >
-                  {NAV_LABELS[key]}
-                  <ChevronDown size={15} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                  <span className="whitespace-nowrap">{NAV_LABELS[key]}</span>
+                  <ChevronDown size={14} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                 </button>
 
                 {isOpen && cat.items?.length > 0 && (
@@ -93,61 +172,27 @@ export default function Navbar({ onServiceClick }) {
         </nav>
 
         {/* Right cluster */}
-        <div className="hidden lg:flex items-center gap-3">
+        <div className="hidden lg:flex items-center gap-2">
           <Link
             to="/refer"
-            className="flex items-center gap-1.5 text-[15px] font-medium text-navy-700 hover:text-navy-900 px-2"
+            className="flex items-center gap-1.5 text-[15px] font-medium text-navy-700 hover:text-navy-900 px-2 whitespace-nowrap"
           >
-            Refer &amp; Earn <Gift size={16} className="text-gold-500" />
+            <span className="whitespace-nowrap">Refer & Earn</span>
+            <Gift size={15} className="text-gold-500" />
           </Link>
           <button
             aria-label="Search"
             className="p-2 rounded-full text-navy-700 hover:bg-navy-50 transition-colors"
           >
-            <Search size={19} />
+            <Search size={18} />
           </button>
 
-          {user ? (
-            // For authenticated users, show Dashboard + Logout (non-admin)
-            user.role === 'admin' ? (
-              <div className="flex items-center gap-2">
-                <Link to="/admin" className="px-3 py-2 rounded-md text-sm font-medium text-navy-700 hover:text-navy-900">Admin Panel</Link>
-                <button
-                  onClick={() => { logout(); navigate('/'); }}
-                  aria-label="Log out"
-                  className="p-2.5 rounded-full text-navy-500 hover:bg-navy-50 hover:text-navy-800 transition-colors"
-                >
-                  <LogOut size={17} />
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Link
-                  to="/dashboard"
-                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-full border border-navy-200 text-navy-800 text-sm font-semibold hover:bg-navy-50 transition-colors"
-                >
-                  <User size={15} /> {user.name?.split(' ')[0]}
-                </Link>
-                <button
-                  onClick={() => {
-                    logout();
-                    navigate('/');
-                  }}
-                  aria-label="Log out"
-                  className="p-2.5 rounded-full text-navy-500 hover:bg-navy-50 hover:text-navy-800 transition-colors"
-                >
-                  <LogOut size={17} />
-                </button>
-              </div>
-            )
-          ) : (
-            <Link
-              to="/login"
-              className="px-5 py-2.5 rounded-full border border-navy-800 text-navy-800 text-sm font-semibold hover:bg-navy-800 hover:text-white transition-colors"
-            >
-              Login
-            </Link>
-          )}
+          {/* Single conditional rendering: Login / Dashboard / Admin Panel */}
+          {renderAuthAction()}
+
+          {/* Profile/avatar pill and logout icon for logged-in users */}
+          {renderProfile()}
+          {renderLogoutIcon()}
         </div>
 
         {/* Mobile toggle */}
@@ -193,42 +238,48 @@ export default function Navbar({ onServiceClick }) {
                 </div>
               );
             })}
-            <div className="pt-3">
+
+            {/* Single conditional rendering for the auth area on mobile */}
+            <div className="pt-3 space-y-2">
               {user ? (
-                <Link
-                  to="/dashboard"
-                  onClick={() => setMobileOpen(false)}
-                  className="block text-center px-5 py-3 rounded-full bg-navy-800 text-white text-sm font-semibold"
-                >
-                  Go to dashboard
-                </Link>
+                <>
+                  {user.role === 'admin' ? (
+                    <>
+                      <Link
+                        to="/admin"
+                        onClick={() => setMobileOpen(false)}
+                        className="block px-4 py-2 rounded-md text-sm"
+                      >
+                        Admin Panel
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        to="/dashboard"
+                        onClick={() => setMobileOpen(false)}
+                        className="block px-4 py-2 rounded-md text-sm"
+                      >
+                        Dashboard
+                      </Link>
+                    </>
+                  )}
+                  {user.name && (
+                    <div className="flex items-center gap-2 px-4 py-2 text-sm text-navy-700">
+                      <User size={15} /> {user.name}
+                    </div>
+                  )}
+                  {renderLogoutButtonMobile()}
+                </>
               ) : (
                 <Link
                   to="/login"
                   onClick={() => setMobileOpen(false)}
-                  className="block text-center px-5 py-3 rounded-full border border-navy-800 text-navy-800 text-sm font-semibold"
+                  className="block px-4 py-2 rounded-md text-sm"
                 >
                   Login
                 </Link>
               )}
-              {/* Mobile admin links */}
-              <div className="mt-3 space-y-2">
-                {user ? (
-                  user.role === 'admin' ? (
-                    <>
-                      <Link to="/admin" onClick={()=>setMobileOpen(false)} className="block px-4 py-2 rounded-md text-sm">Admin Panel</Link>
-                      <button onClick={()=>{ logout(); setMobileOpen(false); navigate('/'); }} className="w-full text-left px-4 py-2 rounded-md border">Logout</button>
-                    </>
-                  ) : (
-                    <>
-                      <Link to="/dashboard" onClick={()=>setMobileOpen(false)} className="block px-4 py-2 rounded-md text-sm">Dashboard</Link>
-                      <button onClick={()=>{ logout(); setMobileOpen(false); navigate('/'); }} className="w-full text-left px-4 py-2 rounded-md border">Logout</button>
-                    </>
-                  )
-                ) : (
-                  <Link to="/login" onClick={()=>setMobileOpen(false)} className="block px-4 py-2 rounded-md text-sm">Login</Link>
-                )}
-              </div>
             </div>
           </div>
         </div>

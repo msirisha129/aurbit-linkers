@@ -26,6 +26,7 @@ export default function IcegateDetails({ onEnquire }) {
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [selectAllChecked, setSelectAllChecked] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState(null); // 'success' | 'failed' | null
   // use onEnquire (provided by App.openLeadModal) to open central LeadModal
 
   const filteredLocations = useMemo(() => {
@@ -65,6 +66,37 @@ export default function IcegateDetails({ onEnquire }) {
       return next;
     });
     setSelectAllChecked(false);
+  }
+
+  const handlePayment = async () => {
+    try {
+      const res = await fetch("http://localhost:3001/api/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: 2899,
+          customerName: "M Sirisha",
+          customerEmail: "msirisha454@gmail.com",
+          customerPhone: "9611150532"
+        })
+      })
+      const data = await res.json()
+      
+      if (!data.payment_session_id) {
+        alert("Error: " + JSON.stringify(data))
+        return
+      }
+
+      const { load } = await import("@cashfreepayments/cashfree-js")
+      const cashfree = await load({ mode: "sandbox" })
+      cashfree.checkout({
+        paymentSessionId: data.payment_session_id,
+        redirectTarget: "_modal"
+      })
+
+    } catch (err) {
+      alert("Error: " + err.message)
+    }
   }
 
   function submitLocationsRequest() {
@@ -210,7 +242,7 @@ export default function IcegateDetails({ onEnquire }) {
                 </div>
               </div>
               <div className="flex gap-3 justify-end md:justify-center">
-                <button onClick={() => { /* proceed to payment placeholder */ }} className="px-4 py-2 rounded-full bg-gold-600 text-white font-semibold">Proceed to Payment</button>
+                <button onClick={handlePayment} className="px-4 py-2 rounded-full bg-gold-600 text-white font-semibold">Proceed to Payment</button>
                 <button onClick={() => { /* submit application placeholder */ }} className="px-4 py-2 rounded-full border">Submit Application</button>
               </div>
             </div>

@@ -35,7 +35,7 @@ export function AuthProvider({ children }) {
       const { data } = await api.post('/auth/login', { email, password });
       localStorage.setItem(TOKEN_KEY, data.token);
       setUser(data.user);
-      return { ok: true };
+      return { ok: true, user: data.user };
     } catch (err) {
       return { ok: false, message: getErrorMessage(err) };
     }

@@ -10,17 +10,52 @@ export default function Hero({ onGetStarted }) {
         preserveAspectRatio="xMidYMid slice"
         aria-hidden="true"
       >
+        <defs>
+          <style>
+            {`
+              .dot-travel-1 {
+                animation: travelLine1 10s ease-in-out infinite;
+              }
+              .dot-travel-2 {
+                animation: travelLine2 10s ease-in-out infinite;
+              }
+              .dot-travel-3 {
+                animation: travelLine3 10s ease-in-out infinite;
+              }
+              .dot-travel-4 {
+                animation: travelLine4 10s ease-in-out infinite;
+              }
+              @keyframes travelLine1 {
+                0%, 100% { transform: translate(0, 0); }
+                50% { transform: translate(260px, 130px); }
+              }
+              @keyframes travelLine2 {
+                0%, 100% { transform: translate(0, 0); }
+                50% { transform: translate(-120px, 200px); }
+              }
+              @keyframes travelLine3 {
+                0%, 100% { transform: translate(0, 0); }
+                50% { transform: translate(140px, 180px); }
+              }
+              @keyframes travelLine4 {
+                0%, 100% { transform: translate(0, 0); }
+                50% { transform: translate(-220px, 120px); }
+              }
+            `}
+          </style>
+        </defs>
         <g opacity="0.5">
+          {/* Fixed connector lines */}
           <line x1="120" y1="90" x2="380" y2="220" stroke="#C9974A" strokeWidth="1" />
           <line x1="380" y1="220" x2="260" y2="420" stroke="#C9974A" strokeWidth="1" />
           <line x1="1180" y1="80" x2="1320" y2="260" stroke="#C9974A" strokeWidth="1" />
           <line x1="1320" y1="260" x2="1100" y2="380" stroke="#C9974A" strokeWidth="1" />
-          <circle cx="120" cy="90" r="4" fill="#C9974A" />
-          <circle cx="380" cy="220" r="3" fill="#0F2A5C" />
-          <circle cx="260" cy="420" r="5" fill="#C9974A" />
-          <circle cx="1180" cy="80" r="3.5" fill="#0F2A5C" />
-          <circle cx="1320" cy="260" r="4.5" fill="#C9974A" />
-          <circle cx="1100" cy="380" r="3" fill="#0F2A5C" />
+          
+          {/* Animated traveling dots */}
+          <circle className="dot-travel-1" cx="120" cy="90" r="4" fill="#C9974A" />
+          <circle className="dot-travel-2" cx="380" cy="220" r="3" fill="#0F2A5C" />
+          <circle className="dot-travel-3" cx="260" cy="420" r="5" fill="#C9974A" />
+          <circle className="dot-travel-4" cx="1180" cy="80" r="3.5" fill="#0F2A5C" />
         </g>
       </svg>
 

@@ -26,6 +26,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    resetPasswordToken: {
+      type: String,
+      default: null,
+    },
+    resetPasswordExpires: {
+      type: Date,
+      default: null,
+    },
     company: {
       type: String,
       trim: true,
@@ -40,12 +48,17 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-userSchema.methods.comparePassword = function comparePassword(candidate) {
-  return bcrypt.compare(candidate, this.passwordHash);
+userSchema.methods.comparePassword = async function comparePassword(candidate) {
+  console.log('[comparePassword] passwordHash exists:', !!this.passwordHash);
+  console.log('[comparePassword] passwordHash length:', this.passwordHash?.length);
+  const result = await bcrypt.compare(candidate, this.passwordHash);
+  console.log('[comparePassword] match result:', result);
+  return result;
 };
 
 userSchema.methods.toSafeJSON = function toSafeJSON() {
   return {
+    _id: this._id,
     id: this._id,
     name: this.name,
     email: this.email,

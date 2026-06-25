@@ -32,11 +32,9 @@ export default function IcegateLanding() {
   const [region, setRegion] = useState('');
   const [panGstin, setPanGstin] = useState('');
   const [error, setError] = useState('');
-  const [msg, setMsg] = useState('');
 
   async function handleContinue() {
     setError('');
-    setMsg('');
     if (!name.trim() || !email.trim() || !phone.trim()) {
       setError('Please fill name, email and phone number.');
       return;
@@ -125,7 +123,6 @@ export default function IcegateLanding() {
                 <div className="flex-1 border-t" />
               </div>
 
-              {msg && <div className="text-sm text-navy-800 mb-2">{msg}</div>}
               {error && <div className="text-sm text-red-600 mb-2">{error}</div>}
 
               <div className="space-y-2">
@@ -177,7 +174,7 @@ export default function IcegateLanding() {
 
       <button
         type="button"
-        onClick={() => setMsg('Live chat coming soon')}
+        onClick={() => { if(window.Tawk_API) window.Tawk_API.toggle() }}
         className="fixed right-6 bottom-6 bg-green-600 text-white px-4 py-2 rounded-full flex items-center gap-2 shadow-lg"
       >
         <MessageSquare size={16} /> Live Chat with Experts

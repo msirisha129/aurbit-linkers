@@ -75,6 +75,12 @@ router.get('/', requireAuth, async (req, res) => {
   return res.json({ leads });
 });
 
+// GET /api/leads/mine (logged-in user's own submitted enquiries)
+router.get('/mine', requireAuth, async (req, res) => {
+  const leads = await Lead.find({ user: req.user._id }).sort({ createdAt: -1 });
+  return res.json({ leads });
+});
+
 // GET /api/leads/:id (admin only)
 router.get('/:id', requireAuth, requireAdmin, async (req, res) => {
   try {
@@ -123,10 +129,19 @@ router.patch('/:id', requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
-// GET /api/leads/mine (logged-in user's own submitted enquiries)
-router.get('/mine', requireAuth, async (req, res) => {
-  const leads = await Lead.find({ user: req.user._id }).sort({ createdAt: -1 });
-  return res.json({ leads });
+// DELETE /api/leads/:id (admin only)
+router.delete('/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const lead = await Lead.findById(req.params.id);
+    if (!lead) return res.status(404).json({ message: 'Lead not found' });
+    await lead.remove();
+    return res.json({ message: 'Lead deleted' });
+  } catch (err) {
+    console.error('Delete lead error:', err);
+    return res.status(500).json({ message: 'Could not delete lead' });
+  }
 });
+
+
 
 module.exports = router;

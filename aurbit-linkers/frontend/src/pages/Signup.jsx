@@ -7,15 +7,34 @@ import { useAuth } from '../context/AuthContext';
 export default function Signup() {
   const { signup } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: '', email: '', password: '', phone: '', company: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '', phone: '', company: '' });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setSubmitting(true);
     setError('');
-    const result = await signup(form);
+    // validation
+    if (!form.name || !form.email || !form.password || !form.confirmPassword) {
+      setError('Please fill all required fields.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+    if (form.password.length < 8) {
+      setError('Password must be at least 8 characters.');
+      return;
+    }
+    if (form.password !== form.confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+
+    setSubmitting(true);
+    const payload = { name: form.name, email: form.email, password: form.password, phone: form.phone, company: form.company };
+    const result = await signup(payload);
     setSubmitting(false);
     if (result.ok) {
       navigate('/dashboard', { replace: true });
@@ -97,11 +116,26 @@ export default function Signup() {
                 id="password"
                 type="password"
                 required
-                minLength={6}
+                minLength={8}
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 className="w-full rounded-lg border border-navy-100 px-3.5 py-2.5 text-sm focus:border-gold-400 focus:ring-1 focus:ring-gold-400 outline-none"
-                placeholder="At least 6 characters"
+                placeholder="At least 8 characters"
+              />
+            </div>
+            <div>
+              <label htmlFor="confirmPassword" className="block text-xs font-medium text-navy-800 mb-1">
+                Confirm password
+              </label>
+              <input
+                id="confirmPassword"
+                type="password"
+                required
+                minLength={8}
+                value={form.confirmPassword}
+                onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                className="w-full rounded-lg border border-navy-100 px-3.5 py-2.5 text-sm focus:border-gold-400 focus:ring-1 focus:ring-gold-400 outline-none"
+                placeholder="Repeat your password"
               />
             </div>
 
