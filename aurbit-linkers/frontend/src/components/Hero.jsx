@@ -311,7 +311,7 @@ export default function Hero({ onGetStarted }) {
               India's compliance, linked & automated
             </h1>
             <p className="text-lg text-slate-muted max-w-xl mx-auto mb-9 leading-relaxed hero-fade-up hero-fade-up-delay-2">
-              Aurbit Linkers connects MCA, GST, and Income Tax filings into one workflow — built on
+              Aurbit Linkers connects GST and Income Tax filings into one workflow — built on
               AI automation, expert review, and a paperless record trail.
             </p>
 
