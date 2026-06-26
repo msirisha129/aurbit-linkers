@@ -174,8 +174,10 @@ export default function Navbar({ onServiceClick }) {
       const isImportExport = cat.key === 'import-export';
 
       if (isImportExport) {
-        // Import Export: two independent flex columns so each column's height
-        // is based on its own content (not row-aligned across columns).
+        // Import Export: two INDEPENDENT flex columns — each stacks its own
+        // content top-to-bottom based ONLY on its own items.  NO row-matching,
+        // NO grid alignment between columns.  Columns may end at different
+        // heights if their content amounts differ.
         const groups = groupBySubheading(cat.items);
         // Distribute groups: col 1 gets first 2 groups, col 2 gets last 1 group
         const col1Groups = groups.slice(0, 2);
@@ -183,9 +185,15 @@ export default function Navbar({ onServiceClick }) {
         const columns = [col1Groups, col2Groups];
 
         return (
-          <div className="flex gap-8" style={{ width: '420px', height: 'auto' }}>
+          <div
+            className="flex flex-row gap-10"
+            style={{ width: '580px', height: 'auto' }}
+          >
             {columns.map((colGroups, colIdx) => (
-              <div key={colIdx} className="flex flex-col gap-y-0 flex-1 min-w-0">
+              <div
+                key={colIdx}
+                className="flex flex-col gap-y-0 flex-1"
+              >
                 {colGroups.map((group) => (
                   <div key={group.subheading.label}>
                     {renderSubheading(group.subheading, group.subheading.label)}

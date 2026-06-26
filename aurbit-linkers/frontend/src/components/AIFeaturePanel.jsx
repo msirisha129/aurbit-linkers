@@ -2,15 +2,15 @@ import { getIcon } from '../lib/icons';
 import { useNavigate } from 'react-router-dom';
 import { homepageCards, fallbackCategories } from '../data/services';
 
-// Map each homepage card to a concrete service slug so the pill can navigate
+// Map each node key to a concrete service slug so the pill can navigate
 // to /service/:slug (the same route ServiceDetail.jsx already handles).
 const slugByCategoryKey = (() => {
   const map = {};
   for (const cat of fallbackCategories) {
-    if (cat.key === 'startup') map[cat.key] = 'private-limited-company';
-    else if (cat.key === 'income-tax') map[cat.key] = 'income-tax-efiling';
+    if (cat.key === 'startup') map[cat.key] = 'udyam-registration-msme';
+    else if (cat.key === 'income-tax') map[cat.key] = 'new-gst-registration';
     else if (cat.key === 'trademark') map[cat.key] = 'trademark-protection';
-    else if (cat.key === 'compliance') map[cat.key] = 'hr-payroll';
+    else if (cat.key === 'compliance') map[cat.key] = 'iec-registration';
   }
   return map;
 })();
@@ -31,10 +31,10 @@ export default function AIFeaturePanel() {
   const nodeRadius = 22;
 
   const nodes = [
-    { key: 'startup', name: 'Business Registration', icon: 'building-2', angle: -Math.PI / 2, color: '#C9974A' },
-    { key: 'income-tax', name: 'Income Tax Filing', icon: 'banknote', angle: 0, color: '#7C97C9' },
+    { key: 'startup', name: 'Business Setup', icon: 'building-2', angle: -Math.PI / 2, color: '#C9974A' },
+    { key: 'income-tax', name: 'GST', icon: 'receipt', angle: 0, color: '#7C97C9' },
     { key: 'trademark', name: 'Trademark Protection', icon: 'shield-check', angle: Math.PI / 3, color: '#C9974A' },
-    { key: 'compliance', name: 'HR & Payroll', icon: 'clipboard-check', angle: Math.PI, color: '#7C97C9' },
+    { key: 'compliance', name: 'Import Export', icon: 'globe', angle: Math.PI, color: '#7C97C9' },
   ].map((n) => ({ ...n, slug: slugByCategoryKey[n.key] }));
 
   const getHubEdge = (angle) => {

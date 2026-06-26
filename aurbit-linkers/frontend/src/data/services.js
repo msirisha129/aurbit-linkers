@@ -100,6 +100,10 @@ export const fallbackCategories = [
 
 export const homepageCards = [
   { key: 'business-setup', name: 'Business Setup', desc: 'Udyam, Shop & Establishment, and FSSAI Food License registrations.', icon: 'briefcase' },
+  { key: 'gst', name: 'GST Compliance', desc: 'Registration, amendments, and regular GSTR filings — all handled in one place.', icon: 'receipt' },
+  { key: 'dsc', name: 'Digital Signature Certificate', desc: 'Get your DSC issued quickly for secure digital filing and authentication.', icon: 'file-badge-2' },
+  { key: 'import-export', name: 'Import Export Services', desc: 'IEC registration, RCMC certifications, and export council compliance.', icon: 'globe' },
+  { key: 'icegate', name: 'ICEGATE Services', desc: 'Registration, AD Code, port codes, and export incentive scrips handled end to end.', icon: 'landmark' },
   { key: 'trademark', name: 'Trademark Protection', desc: 'Search, file, and protect your brand with trademark registration and watch services.', icon: 'shield-check' },
 ];
 
