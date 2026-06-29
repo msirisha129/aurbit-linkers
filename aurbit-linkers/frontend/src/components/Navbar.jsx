@@ -45,6 +45,11 @@ export default function Navbar({ onServiceClick }) {
       navigate('/icegate');
       return;
     }
+    // Special case: route DSC to DSC service page
+    if (categoryLabel === 'DSC') {
+      navigate('/service/dsc');
+      return;
+    }
     onServiceClick({ name: item.name, slug: item.slug, category: categoryLabel });
   }
 

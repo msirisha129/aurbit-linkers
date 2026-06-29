@@ -1,0 +1,6 @@
+const fs=require('fs');
+const p=require('path').join(process.cwd(),'src/components/DSCFAQ.jsx');
+const c=fs.readFileSync(p,'utf8');
+const fixed=c.replace(/<div className="container-page max-w-3xl">/g,'<div className="max-w-7xl mx-auto px-6 lg:px-8">').replace(/className="space-y-3">/g,'className="space-y-3 w-full">');
+fs.writeFileSync(p,fixed);
+console.log('fixed DSCFAQ');

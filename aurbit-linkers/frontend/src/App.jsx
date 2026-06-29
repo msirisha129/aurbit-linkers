@@ -11,6 +11,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import ServiceDetail from './pages/ServiceDetail';
+import DSCService from './pages/DSCService';
 import IcegateDetails from './pages/IcegateDetails';
 import AdminDashboard from './pages/AdminDashboard';
 import Users from './pages/Users';
@@ -93,6 +94,7 @@ function App() {
     </ProtectedRoute>
   }
 />
+          <Route path="/service/dsc" element={<DSCService />} />
           <Route path="/service/:slug" element={<ServiceDetail onEnquire={openLeadModal} />} />
           <Route path="/icegate" element={<IcegateLanding />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
