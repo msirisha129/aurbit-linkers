@@ -15,12 +15,17 @@ import DSCService from './pages/DSCService';
 import DSCDetails from './pages/DSCDetails';
 import DSCPayment from './pages/DSCPayment';
 import DSCPaymentCallback from './pages/DSCPaymentCallback';
+import ICEGatePaymentCallback from './pages/ICEGatePaymentCallback';
+import ICEGateOrderSuccess from './pages/ICEGateOrderSuccess';
+import ICEGatePaymentFailed from './pages/ICEGatePaymentFailed';
 import DSCOrderSuccess from './pages/DSCOrderSuccess';
 import DSCPaymentFailed from './pages/DSCPaymentFailed';
 import MyOrders from './pages/MyOrders';
 import OrderDetails from './pages/OrderDetails';
 import IcegateDetails from './pages/IcegateDetails';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminApplications from './pages/AdminApplications';
+import AdminApplicationDetails from './pages/AdminApplicationDetails';
 import Users from './pages/Users';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
@@ -29,6 +34,7 @@ import StaticPage from './pages/StaticPage';
 import IcegateLanding from './pages/IcegateLanding';
 import Settings from './pages/Settings';
 import PaymentSuccess from './pages/PaymentSuccess';
+import ApplicationDetails from './pages/ApplicationDetails';
 
 function App() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -92,14 +98,30 @@ function App() {
   }
 />
 
-<Route
-  path="/admin/settings"
-  element={
-    <ProtectedRoute adminOnly>
-      <Settings />
-    </ProtectedRoute>
-  }
-/>
+          <Route
+            path="/admin/settings"
+            element={
+              <ProtectedRoute adminOnly>
+                <Settings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/applications"
+            element={
+              <ProtectedRoute adminOnly>
+                <AdminApplications />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/applications/details"
+            element={
+              <ProtectedRoute adminOnly>
+                <AdminApplicationDetails />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/service/dsc" element={<DSCService />} />
           <Route path="/service/dsc/details" element={<DSCDetails />} />
           <Route path="/service/dsc/payment" element={<DSCPayment />} />
@@ -110,7 +132,11 @@ function App() {
           <Route path="/service/dsc/orders/:id" element={<OrderDetails />} />
           <Route path="/service/:slug" element={<ServiceDetail onEnquire={openLeadModal} />} />
           <Route path="/icegate" element={<IcegateLanding />} />
+          <Route path="/service/icegate-registration/payment-callback" element={<ICEGatePaymentCallback />} />
+          <Route path="/service/icegate-registration/order-success" element={<ICEGateOrderSuccess />} />
+          <Route path="/service/icegate-registration/payment-failed" element={<ICEGatePaymentFailed />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/service/application/details" element={<ApplicationDetails />} />
 
           {/* Footer / static informational pages */}
           <Route path="/about" element={<StaticPage title="About Aurbit Linkers" />} />

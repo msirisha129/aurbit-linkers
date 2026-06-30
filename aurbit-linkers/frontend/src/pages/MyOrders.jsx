@@ -70,7 +70,7 @@ export default function MyOrders() {
               <div
                 key={order.orderId || idx}
                 className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 sm:p-5 hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => navigate(`/service/dsc/orders/${order.orderId}`, { state: order })}
+                onClick={() => navigate('/service/application/details', { state: order })}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">

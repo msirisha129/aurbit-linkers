@@ -9,6 +9,7 @@ export default function DSCPayment() {
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
+    console.log("STEP 1 - DSCPayment Mounted");
     // -------------------------------------------------------
     // Only run once on mount — create order & open Cashfree
     // -------------------------------------------------------
@@ -48,6 +49,7 @@ export default function DSCPayment() {
 
         const data = await res.json();
         console.log('DSCPayment: Order created. Response:', data);
+        console.log("STEP 2 - Create Order Response", data);
 
         if (cancelled) return;
 
@@ -65,6 +67,7 @@ export default function DSCPayment() {
         const { load } = await import('@cashfreepayments/cashfree-js');
         const cashfree = await load({ mode: 'sandbox' });
 
+        console.log("STEP 3 - Opening Cashfree Checkout");
         console.log('DSCPayment: Opening Cashfree checkout...');
 
         // Open Cashfree modal — callbacks are for logging only.
@@ -73,10 +76,12 @@ export default function DSCPayment() {
           paymentSessionId: data.payment_session_id,
           redirectTarget: '_modal',
           onSuccess: (result) => {
+            console.log("STEP 4 - Cashfree onSuccess", result);
             console.log('DSCPayment: onSuccess callback (logging only):', result);
             // PaymentCallback will handle the official verification after redirect
           },
           onFailure: (error) => {
+            console.log("STEP 5 - Cashfree onFailure", error);
             console.log('DSCPayment: onFailure callback:', error);
             // If the modal shows failure (user closed it, etc.), navigate to failed page
             navigate('/service/dsc/payment-failed', {

@@ -1,17 +1,19 @@
-import { useEffect, useState } from 'react';
+ import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 
-export default function DSCPaymentCallback() {
+export default function ICEGatePaymentCallback() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [status, setStatus] = useState('verifying');
   const [errorMsg, setErrorMsg] = useState('');
 
+  console.log("STEP 4 - Callback page mounted");
+
   useEffect(() => {
-    console.log("STEP 6 - Callback Component Mounted");
     const orderId = searchParams.get('order_id');
-    console.log("Order ID From URL:", orderId);
+
+    console.log("Order ID:", orderId);
 
     if (!orderId) {
       setStatus('error');
@@ -19,12 +21,12 @@ export default function DSCPaymentCallback() {
       return;
     }
 
-    console.log('PaymentCallback: Verifying order', orderId);
-    console.log("STEP 7 - Calling Verify Payment");
+    console.log('ICEGateCallback: Verifying order', orderId);
 
     const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
     // Step 1: Verify payment with Cashfree
+    console.log("STEP 5 - Calling verify-payment");
     fetch(`${API_BASE}/verify-payment`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -37,8 +39,8 @@ export default function DSCPaymentCallback() {
         return res.json();
       })
       .then(async (verification) => {
-        console.log("STEP 8 - Verify Payment Response", verification);
-        console.log('PaymentCallback: Verification result:', verification);
+        console.log("STEP 6 - Verify response", verification);
+        console.log('ICEGateCallback: Verification result:', verification);
 
         const isSuccess =
           verification?.payment_status === 'SUCCESS' ||
@@ -49,17 +51,9 @@ export default function DSCPaymentCallback() {
           verification?.success === true;
 
         if (!isSuccess) {
-          // Payment not successful
-          let pendingConfig = {};
-          try {
-            const stored = sessionStorage.getItem('dsc_pending_config');
-            if (stored) pendingConfig = JSON.parse(stored);
-          } catch (e) {}
-
-          console.log('PaymentCallback: Payment not successful. Status:', verification);
-          navigate('/service/dsc/payment-failed', {
+          console.log('ICEGateCallback: Payment not successful. Status:', verification);
+          navigate('/service/icegate-registration/payment-failed', {
             state: {
-              ...pendingConfig,
               reason:
                 verification?.payment_message ||
                 verification?.message ||
@@ -70,7 +64,7 @@ export default function DSCPaymentCallback() {
           return;
         }
 
-        // Payment is successful — build order data
+        // Payment is successful
         const paymentId =
           verification?.cf_payment_id ||
           verification?.payment_id ||
@@ -86,27 +80,24 @@ export default function DSCPaymentCallback() {
           customerEmail ||
           'Customer';
 
-        // Step 2: Save DSC application to MongoDB (authenticated)
+        // Step 2: Save ICEGATE application to MongoDB (authenticated)
+        console.log("STEP 7 - Creating ICEGATE application");
         try {
-          const appResponse = await api.post('/dsc/applications', {
+          const appResponse = await api.post('/icegate/applications', {
             orderId: verification.order_id || orderId,
             paymentId,
             customerName,
             email: customerEmail,
             mobile: customerPhone,
-            certificateType: 'Signature',
-            classType: 'Class 3',
-            userType: 'Individual',
-            validity: '1',
-            amount: Number(verification.order_amount || 0),
+            amount: Number(verification.order_amount || 2899),
           });
-          console.log('PaymentCallback: DSC application saved:', appResponse.data);
+          console.log("STEP 8 - Application created", appResponse.data);
+          console.log('ICEGateCallback: Application saved:', appResponse.data);
         } catch (appErr) {
-          // Log but don't block — the payment is already verified
-          console.warn('PaymentCallback: Could not save DSC application to backend:', appErr);
+          console.warn('ICEGateCallback: Could not save application to backend:', appErr);
         }
 
-        // Step 3: Also save to localStorage for MyOrders page
+        // Step 3: Navigate to success page
         const now = new Date();
         const orderData = {
           orderId: verification.order_id || orderId,
@@ -115,36 +106,24 @@ export default function DSCPaymentCallback() {
           customerName,
           mobile: customerPhone,
           email: customerEmail,
-          certificateType: 'Signature',
-          classType: 'Class 3',
-          userType: 'Individual',
-          validity: '1',
           status: 'Paid',
           date: now.toISOString(),
-          service: 'Digital Signature Certificate',
+          service: 'ICEGATE Registration',
         };
 
-        try {
-          const existingOrders = JSON.parse(localStorage.getItem('dsc_orders') || '[]');
-          existingOrders.unshift(orderData);
-          localStorage.setItem('dsc_orders', JSON.stringify(existingOrders));
-        } catch (e) {
-          console.warn('Could not save order to localStorage:', e);
-        }
-
-        console.log("STEP 9 - Navigating To Order Success");
-        console.log('PaymentCallback: Payment verified, navigating to success...');
-        navigate('/service/dsc/order-success', {
+        console.log("STEP 9 - Navigating to success");
+        console.log('ICEGateCallback: Payment verified, navigating to success...');
+        navigate('/service/icegate-registration/order-success', {
           state: orderData,
           replace: true,
         });
       })
       .catch((err) => {
-        console.error('PaymentCallback: Verification error:', err);
+        console.error('ICEGateCallback: Verification error:', err);
         setStatus('error');
         setErrorMsg(
           'Could not verify payment status. ' +
-            (err.message || 'Please check your order in My Orders.')
+            (err.message || 'Please contact support.')
         );
       });
   }, []);
@@ -157,10 +136,10 @@ export default function DSCPaymentCallback() {
           <h2 className="text-xl font-bold text-navy-900 mb-2">Verification Error</h2>
           <p className="text-slate-600 mb-6">{errorMsg}</p>
           <button
-            onClick={() => navigate('/service/dsc')}
+            onClick={() => navigate('/icegate')}
             className="px-6 py-3 bg-[#1a2744] text-white rounded-lg text-sm font-semibold hover:bg-[#15203a] transition-colors"
           >
-            Back to DSC
+            Back to ICEGATE
           </button>
         </div>
       </div>

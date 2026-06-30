@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import api from '../lib/api';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Globe, FileText, Star, MapPin, Users, CheckCircle } from 'lucide-react';
 
 export default function IcegateDetails({ onEnquire }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const applicant = location?.state || null;
   const [activeTab, setActiveTab] = useState('service');
 
@@ -70,33 +71,57 @@ export default function IcegateDetails({ onEnquire }) {
 
   const handlePayment = async () => {
     try {
+      // Use actual applicant data — never hardcode
+      const customerName = applicant?.name || formData?.name || 'Customer';
+      const customerEmail = applicant?.email || formData?.email || 'customer@example.com';
+      const customerPhone = applicant?.phone || formData?.phone || '';
+      const amount = 2899; // Starting price for ICEGATE
+
       const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
       const res = await fetch(API_BASE + "/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount: 2899,
-          customerName: "M Sirisha",
-          customerEmail: "msirisha454@gmail.com",
-          customerPhone: "9611150532"
+          amount,
+          customerName,
+          customerEmail,
+          customerPhone,
+          callbackPath: '/service/icegate-registration/payment-callback'
         })
-      })
-      const data = await res.json()
+      });
+      const data = await res.json();
       
       if (!data.payment_session_id) {
-        alert("Error: " + JSON.stringify(data))
-        return
+        alert("Error: " + JSON.stringify(data));
+        return;
       }
 
-      const { load } = await import("@cashfreepayments/cashfree-js")
-      const cashfree = await load({ mode: "sandbox" })
+      console.log("STEP 1 - Starting Cashfree checkout");
+      console.log("ICEGATE STEP 1 - Opening Cashfree");
+
+      const { load } = await import("@cashfreepayments/cashfree-js");
+      const cashfree = await load({ mode: "sandbox" });
+      const createdOrderId = data.order_id || 'order_' + Date.now();
+
       cashfree.checkout({
         paymentSessionId: data.payment_session_id,
-        redirectTarget: "_modal"
-      })
-
+        redirectTarget: "_modal",
+        onSuccess: (result) => {
+          console.log("STEP 2 - onSuccess fired", result);
+          console.log("ICEGATE STEP 2 - onSuccess fired", result);
+          console.log("Created Order ID:", createdOrderId);
+          console.log("ICEGATE STEP 3 - Navigating to callback", createdOrderId);
+          // Navigate to the existing payment-callback pipeline for verification
+          navigate('/service/icegate-registration/payment-callback?order_id=' + createdOrderId);
+        },
+        onFailure: (error) => {
+          console.log("STEP 3 - onFailure fired", error);
+          console.log("ICEGATE STEP 4 - onFailure fired", error);
+          alert(error?.message || 'Payment was cancelled or failed.');
+        }
+      });
     } catch (err) {
-      alert("Error: " + err.message)
+      alert("Error: " + err.message);
     }
   }
 

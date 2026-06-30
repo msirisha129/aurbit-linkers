@@ -61,16 +61,27 @@ app.use('/api/services', serviceRoutes);
 app.use('/api/customs-locations', customsLocationRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/dsc/applications', require('./routes/dscApplications'));
+app.use('/api/icegate/applications', require('./routes/icegateApplications'));
 
 // ---- Cashfree payment order creation ----
 app.post('/api/create-order', async (req, res) => {
   try {
-    console.log('Request body:', req.body);
+    console.log("========== CREATE ORDER ==========");
+    console.log("Request Body:", req.body);
 
-    const { amount, customerName, customerEmail, customerPhone } = req.body;
+    const { amount, customerName, customerEmail, customerPhone, callbackPath } = req.body;
+
+    console.log('[create-order] callbackPath received:', callbackPath);
 
     const orderId = 'order_' + Date.now();
     const orderToken = 'token_' + Date.now();
+
+    // Determine callback URL — default to DSC, allow override for ICEGATE
+    const callbackBase = callbackPath || '/service/dsc/payment-callback';
+
+    const returnUrl = 'http://localhost:5173' + callbackBase + '?order_id=' + orderId;
+    console.log("Generated Order ID:", orderId);
+    console.log("Generated Return URL:", returnUrl);
 
     const orderData = {
       order_id: orderId,
@@ -84,7 +95,7 @@ app.post('/api/create-order', async (req, res) => {
       },
       order_meta: {
         return_url:
-          'http://localhost:5173/service/dsc/payment-callback?order_id=' +
+          'http://localhost:5173' + callbackBase + '?order_id=' +
           orderId,
       },
     };
@@ -128,7 +139,8 @@ app.post('/api/create-order', async (req, res) => {
     const responseText = JSON.stringify(response.data);
     console.log('Cashfree raw response:', responseText);
     const data = response.data;
-    console.log('payment_session_id:', data.payment_session_id);
+    console.log("Cashfree Response:", data);
+    console.log("Payment Session:", data.payment_session_id);
 
     res.json(data);
   } catch (error) {
@@ -140,11 +152,14 @@ app.post('/api/create-order', async (req, res) => {
 // ---- Cashfree payment verification ----
 app.post('/api/verify-payment', async (req, res) => {
   try {
+    console.log("========== VERIFY PAYMENT ==========");
     const { order_id } = req.body;
     if (!order_id) {
       return res.status(400).json({ success: false, message: 'order_id is required' });
     }
 
+    console.log("Incoming Order ID:", req.body.order_id);
+    console.log('[verify-payment] Received order_id:', order_id);
     console.log('Verifying payment for order:', order_id);
 
     const options = {
@@ -177,6 +192,7 @@ app.post('/api/verify-payment', async (req, res) => {
     });
 
     console.log('Cashfree verification response status:', response.status);
+    console.log("Cashfree Verification Response:", response.data);
     console.log('Cashfree verification body:', JSON.stringify(response.data));
 
     if (response.status !== 200) {
@@ -204,6 +220,8 @@ app.post('/api/verify-payment', async (req, res) => {
       payment_message: data.payment_message || data.order_note || '',
       status: data.order_status === 'PAID' ? 'SUCCESS' : data.order_status === 'ACTIVE' ? 'PENDING' : 'FAILED',
     };
+
+    console.log("Response Returned To Frontend:", result);
 
     res.json(result);
   } catch (error) {

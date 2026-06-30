@@ -1,7 +1,7 @@
-mport { useLocation, useNavigate } from 'react-router-dom';
-import { CheckCircle, ChevronRight, ArrowLeft, FileText, Download, LayoutDashboard } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { CheckCircle, ChevronRight, ArrowLeft, LayoutDashboard, FileText, Download } from 'lucide-react';
 
-export default function DSCOrderSuccess() {
+export default function ICEGateOrderSuccess() {
   const location = useLocation();
   const navigate = useNavigate();
   const order = location.state || {};
@@ -12,10 +12,10 @@ export default function DSCOrderSuccess() {
         <div className="text-center max-w-md px-6">
           <p className="text-slate-600 mb-4">No order information found.</p>
           <button
-            onClick={() => navigate('/service/dsc')}
+            onClick={() => navigate('/icegate')}
             className="px-6 py-3 bg-[#1a2744] text-white rounded-lg text-sm font-semibold hover:bg-[#15203a] transition-colors"
           >
-            Back to DSC
+            Back to ICEGATE
           </button>
         </div>
       </div>
@@ -50,11 +50,11 @@ export default function DSCOrderSuccess() {
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
         {/* Back link */}
         <button
-          onClick={() => navigate('/service/dsc')}
+          onClick={() => navigate('/icegate')}
           className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-navy-900 transition-colors mb-6"
         >
           <ArrowLeft size={16} />
-          Back to DSC
+          Back to ICEGATE
         </button>
 
         {/* Main Success Card */}
@@ -66,7 +66,7 @@ export default function DSCOrderSuccess() {
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-navy-900 mb-2">✔ Payment Successful</h1>
             <p className="text-base text-slate-600 max-w-md mx-auto">
-              Thank you for your purchase. Your Digital Signature Certificate request has been submitted successfully.
+              Thank you for your purchase. Your ICEGATE Registration request has been submitted successfully.
             </p>
           </div>
 
@@ -78,10 +78,7 @@ export default function DSCOrderSuccess() {
               {detailRow('Payment ID', order.paymentId)}
               {detailRow('Customer Name', order.customerName)}
               {detailRow('Mobile Number', order.mobile)}
-              {detailRow('Service', order.service || 'Digital Signature Certificate')}
-              {detailRow('Certificate Type', order.certificateType || 'Signature')}
-              {detailRow('Class', order.classType || 'Class 3')}
-              {detailRow('Validity', `${order.validity || '1'} Year${order.validity !== '1' ? 's' : ''}`)}
+              {detailRow('Service', order.service || 'ICEGATE Registration')}
               {detailRow('Amount Paid', `₹${Number(order.amount).toLocaleString('en-IN')}`)}
               {detailRow('Payment Date', paymentDate)}
               {detailRow(
@@ -102,9 +99,9 @@ export default function DSCOrderSuccess() {
             </h2>
             <ul className="space-y-3">
               {[
-                'Our team will review your application within 24 hours.',
-                'If eKYC is pending, we will notify you via SMS and email.',
-                'After successful verification, your DSC will be issued within 30 minutes.',
+                'Our team will review your ICEGATE registration within 24 hours.',
+                'We will assist with document submission and DSC linking.',
+                'After successful verification, your ICEGATE account will be activated.',
                 'You can track the application status from your dashboard anytime.',
               ].map((step, i) => (
                 <li key={i} className="flex items-start gap-3">
@@ -128,7 +125,6 @@ export default function DSCOrderSuccess() {
             </button>
             <button
               onClick={() => {
-                // Generate a simple receipt text and trigger download
                 const receipt = [
                   '=== AURBIT LINKERS - Payment Receipt ===',
                   '',
@@ -137,10 +133,7 @@ export default function DSCOrderSuccess() {
                   `Date: ${paymentDate}`,
                   `Customer: ${order.customerName}`,
                   `Mobile: ${order.mobile}`,
-                  `Service: ${order.service || 'Digital Signature Certificate'}`,
-                  `Certificate Type: ${order.certificateType || 'Signature'}`,
-                  `Class: ${order.classType || 'Class 3'}`,
-                  `Validity: ${order.validity || '1'} Year(s)`,
+                  `Service: ${order.service || 'ICEGATE Registration'}`,
                   `Amount: ₹${Number(order.amount).toLocaleString('en-IN')}`,
                   `Status: Paid`,
                   '',

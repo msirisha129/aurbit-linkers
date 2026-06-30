@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Building2, Mail, Phone, Clock, Inbox, FileText, CheckCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../lib/api';
@@ -20,10 +21,17 @@ const appStatusStyles = {
 };
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [leads, setLeads] = useState([]);
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [icegateApps, setIcegateApps] = useState([]);
+
+  const handleApplicationClick = (application) => {
+    navigate('/service/application/details', { state: application });
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -37,7 +45,11 @@ export default function Dashboard() {
         if (!cancelled) setApplications(data.applications || []);
       }).catch(() => {});
 
-      Promise.all([p1, p2]).finally(() => {
+      const p3 = api.get('/icegate/applications/mine').then(({ data }) => {
+        if (!cancelled) setIcegateApps(data.applications || []);
+      }).catch(() => {});
+
+      Promise.all([p1, p2, p3]).finally(() => {
         if (!cancelled) setLoading(false);
       });
     }
@@ -112,11 +124,19 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* DSC Applications Section */}
+        {/* My Applications Section */}
         <div className="bg-white border border-navy-100 rounded-2xl shadow-soft mt-6">
-          <div className="px-7 py-5 border-b border-navy-100 flex items-center gap-2.5">
-            <FileText size={18} className="text-gold-600" />
-            <h2 className="font-display text-lg text-navy-900">Your DSC Applications</h2>
+          <div className="px-7 py-5 border-b border-navy-100 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <FileText size={18} className="text-gold-600" />
+              <h2 className="font-display text-lg text-navy-900">My Applications</h2>
+            </div>
+            <button
+              onClick={() => navigate('/service/application/details')}
+              className="text-sm text-navy-900 font-semibold hover:text-navy-700 transition-colors"
+            >
+              View All Applications
+            </button>
           </div>
 
           {loading ? (
@@ -124,51 +144,63 @@ export default function Dashboard() {
           ) : applications.length === 0 ? (
             <div className="px-7 py-12 text-center">
               <p className="text-slate-muted text-sm">
-                You haven't purchased any DSC yet. Visit the DSC page to get started.
+                You haven't submitted any applications yet. Browse our services to get started.
               </p>
             </div>
           ) : (
-            <ul className="divide-y divide-navy-50">
-              {applications.map((app) => (
-                <li key={app._id} className="px-7 py-5 flex items-start justify-between gap-4">
-                  <div>
-                    <p className="font-medium text-navy-900">
-                      {app.service || 'Digital Signature Certificate'}
-                    </p>
-                    <p className="text-xs text-slate-muted mt-0.5">
-                      Application: <span className="font-mono">{app.applicationId}</span>
-                      {app.orderId && <> · Order: <span className="font-mono">{app.orderId}</span></>}
-                    </p>
-                    <p className="text-xs text-slate-muted mt-0.5">
-                      Amount: <strong>₹{Number(app.amount).toLocaleString('en-IN')}</strong>
-                      {app.certificateType && <> · {app.certificateType}</>}
-                      {app.classType && <> · {app.classType}</>}
-                    </p>
-                    <p className="flex items-center gap-1.5 text-xs text-slate-muted mt-2.5">
-                      <Clock size={13} />
-                      {new Date(app.createdAt).toLocaleDateString('en-IN', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <span
-                      className={`text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap ${
-                        appStatusStyles[app.applicationStatus] || 'bg-gray-100 text-gray-700'
-                      }`}
-                    >
-                      {app.applicationStatus || 'Documents Pending'}
-                    </span>
-                    <span className="text-xs text-emerald-600 font-medium flex items-center gap-1">
-                      <CheckCircle size={12} />
-                      {app.paymentStatus}
-                    </span>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <>
+              <ul className="divide-y divide-navy-50">
+                {applications.slice(0, 5).map((app) => (
+                  <li
+                    key={app._id || app.applicationId}
+                    onClick={() => handleApplicationClick(app)}
+                    className="px-7 py-5 flex items-start justify-between gap-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                  >
+                    <div>
+                      <p className="font-medium text-navy-900">{app.service}</p>
+                      <p className="text-xs text-slate-muted mt-0.5">
+                        Application: <span className="font-mono">{app.applicationId}</span>
+                        {app.orderId && <> · Order: <span className="font-mono">{app.orderId}</span></>}
+                      </p>
+                      <p className="text-xs text-slate-muted mt-0.5">
+                        Amount: <strong>₹{Number(app.amount).toLocaleString('en-IN')}</strong>
+                      </p>
+                      <p className="flex items-center gap-1.5 text-xs text-slate-muted mt-2.5">
+                        <Clock size={13} />
+                        {new Date(app.createdAt).toLocaleDateString('en-IN', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <span
+                        className={`text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap ${
+                          appStatusStyles[app.applicationStatus] || 'bg-gray-100 text-gray-700'
+                        }`}
+                      >
+                        {app.applicationStatus || 'Documents Pending'}
+                      </span>
+                      <span className="text-xs text-emerald-600 font-medium flex items-center gap-1">
+                        <CheckCircle size={12} />
+                        {app.paymentStatus || 'Paid'}
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              {applications.length > 5 && (
+                <div className="px-7 py-4 text-center border-t border-navy-50">
+                  <button
+                    onClick={() => navigate('/service/application/details')}
+                    className="text-sm text-navy-900 font-semibold hover:text-navy-700 transition-colors"
+                  >
+                    View All {applications.length} Applications
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

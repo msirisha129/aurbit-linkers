@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
-import { Users, Inbox, CheckCircle, Clock, XCircle, PhoneCall } from 'lucide-react';
+import { Users, Inbox, CheckCircle, Clock, XCircle, PhoneCall, FileText } from 'lucide-react';
 
 export default function AdminDashboard() {
   const [counts, setCounts] = useState({});
@@ -56,6 +56,7 @@ export default function AdminDashboard() {
           <h2 className="font-semibold mb-4">Admin Panel</h2>
           <nav className="space-y-2 text-sm">
             <Link to="/admin" className="block px-3 py-2 rounded hover:bg-navy-50">Dashboard</Link>
+            <Link to="/admin/applications" className="block px-3 py-2 rounded hover:bg-navy-50">Applications</Link>
             <Link to="/admin/leads" className="block px-3 py-2 rounded hover:bg-navy-50">Leads</Link>
             <Link to="/admin/users" className="block px-3 py-2 rounded hover:bg-navy-50">Users</Link>
             <Link to="/admin/settings" className="block px-3 py-2 rounded hover:bg-navy-50">Settings</Link>
