@@ -14,6 +14,7 @@ import ServiceDetail from './pages/ServiceDetail';
 import DSCService from './pages/DSCService';
 import DSCDetails from './pages/DSCDetails';
 import DSCPayment from './pages/DSCPayment';
+import DSCPaymentCallback from './pages/DSCPaymentCallback';
 import DSCOrderSuccess from './pages/DSCOrderSuccess';
 import DSCPaymentFailed from './pages/DSCPaymentFailed';
 import MyOrders from './pages/MyOrders';
@@ -102,6 +103,7 @@ function App() {
           <Route path="/service/dsc" element={<DSCService />} />
           <Route path="/service/dsc/details" element={<DSCDetails />} />
           <Route path="/service/dsc/payment" element={<DSCPayment />} />
+          <Route path="/service/dsc/payment-callback" element={<DSCPaymentCallback />} />
           <Route path="/service/dsc/order-success" element={<DSCOrderSuccess />} />
           <Route path="/service/dsc/payment-failed" element={<DSCPaymentFailed />} />
           <Route path="/service/dsc/orders" element={<MyOrders />} />

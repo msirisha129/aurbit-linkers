@@ -38,7 +38,7 @@ app.post('/api/create-order', async (req, res) => {
         customer_phone: customerPhone
       },
       order_meta: {
-        return_url: "http://localhost:5173/payment-success?order_id=" + orderId + "&order_token=" + orderToken
+        return_url: "http://localhost:5173/service/dsc/payment-callback?order_id=" + orderId
       }
     };
 

@@ -83,10 +83,8 @@ app.post('/api/create-order', async (req, res) => {
       },
       order_meta: {
         return_url:
-          'http://localhost:5173/payment-success?order_id=' +
-          orderId +
-          '&order_token=' +
-          orderToken,
+          'http://localhost:5173/service/dsc/payment-callback?order_id=' +
+          orderId,
       },
     };
 
@@ -134,6 +132,81 @@ app.post('/api/create-order', async (req, res) => {
     res.json(data);
   } catch (error) {
     console.error('Error creating Cashfree order:', error);
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+});
+
+// ---- Cashfree payment verification ----
+app.post('/api/verify-payment', async (req, res) => {
+  try {
+    const { order_id } = req.body;
+    if (!order_id) {
+      return res.status(400).json({ success: false, message: 'order_id is required' });
+    }
+
+    console.log('Verifying payment for order:', order_id);
+
+    const options = {
+      hostname: 'sandbox.cashfree.com',
+      path: '/pg/orders/' + order_id,
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-client-id': process.env.CASHFREE_APP_ID,
+        'x-client-secret': process.env.CASHFREE_SECRET_KEY,
+        'x-api-version': '2023-08-01',
+      },
+    };
+
+    const response = await new Promise((resolve, reject) => {
+      const req = https.request(options, (response) => {
+        let body = '';
+        response.on('data', (chunk) => (body += chunk));
+        response.on('end', () => {
+          try {
+            resolve({ status: response.statusCode, data: JSON.parse(body) });
+          } catch (e) {
+            resolve({ status: response.statusCode, data: body });
+          }
+        });
+      });
+
+      req.on('error', reject);
+      req.end();
+    });
+
+    console.log('Cashfree verification response status:', response.status);
+    console.log('Cashfree verification body:', JSON.stringify(response.data));
+
+    if (response.status !== 200) {
+      return res.status(response.status).json({
+        success: false,
+        message: 'Failed to verify payment with Cashfree',
+        cashfree_error: response.data,
+      });
+    }
+
+    const data = response.data;
+
+    // Map Cashfree response to a clean format
+    const result = {
+      success: true,
+      order_id: data.order_id,
+      order_amount: data.order_amount,
+      order_currency: data.order_currency,
+      order_status: data.order_status,
+      payment_status: data.payment_status || data.order_status,
+      cf_order_id: data.cf_order_id,
+      cf_payment_id: data.cf_payment_id || data.payment_session_id || null,
+      payment_id: data.cf_payment_id || data.payment_session_id || 'PAY_' + Date.now(),
+      customer_details: data.customer_details || {},
+      payment_message: data.payment_message || data.order_note || '',
+      status: data.order_status === 'PAID' ? 'SUCCESS' : data.order_status === 'ACTIVE' ? 'PENDING' : 'FAILED',
+    };
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error verifying payment:', error);
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 });
