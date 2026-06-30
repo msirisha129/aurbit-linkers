@@ -6,7 +6,7 @@ import api from '../lib/api';
 import ApplicationHeader from '../components/application/ApplicationHeader';
 import ApplicationSummaryCard from '../components/application/ApplicationSummaryCard';
 import ApplicationTimeline from '../components/application/ApplicationTimeline';
-import DocumentUploader from '../components/application/DocumentUploader';
+import AdminDocumentReview from '../components/application/AdminDocumentReview';
 import ApplicationStatusBadge from '../components/application/ApplicationStatusBadge';
 
 export default function AdminApplicationDetails() {
@@ -104,26 +104,6 @@ export default function AdminApplicationDetails() {
     updateStatus('Completed', 'Completed', 'Application has been completed successfully.');
   };
 
-  const handleUpload = async (documentName, file) => {
-    if (file === null) {
-      return;
-    }
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const newDoc = {
-          name: documentName,
-          fileName: file.name,
-          type: file.type,
-          size: file.size,
-          uploadedAt: new Date(),
-        };
-        setDocuments([...documents, newDoc]);
-        console.log('Mock upload:', documentName, file.name);
-        resolve();
-      }, 1000);
-    });
-  };
-
   const getRequiredDocuments = (service) => {
     const serviceLower = (service || '').toLowerCase();
     if (serviceLower.includes('dsc')) {
@@ -208,11 +188,18 @@ export default function AdminApplicationDetails() {
         </div>
 
         {/* Uploaded Documents */}
-        <DocumentUploader
+        <AdminDocumentReview
           service={application.service}
           requiredDocuments={getRequiredDocuments(application.service)}
-          uploadedDocuments={documents}
-          onUpload={handleUpload}
+          documents={documents}
+          onView={(docName, doc) => {
+            console.log('View document:', docName, doc);
+            alert(`Viewing: ${docName}\nFile: ${doc?.fileName || doc?.name}`);
+          }}
+          onDownload={(docName, doc) => {
+            console.log('Download document:', docName, doc);
+            alert(`Downloading: ${docName}\nFile: ${doc?.fileName || doc?.name}`);
+          }}
         />
 
         {/* Timeline */}

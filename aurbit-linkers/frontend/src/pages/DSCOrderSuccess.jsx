@@ -1,4 +1,4 @@
-mport { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { CheckCircle, ChevronRight, ArrowLeft, FileText, Download, LayoutDashboard } from 'lucide-react';
 
 export default function DSCOrderSuccess() {
