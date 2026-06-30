@@ -12,6 +12,12 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import ServiceDetail from './pages/ServiceDetail';
 import DSCService from './pages/DSCService';
+import DSCDetails from './pages/DSCDetails';
+import DSCPayment from './pages/DSCPayment';
+import DSCOrderSuccess from './pages/DSCOrderSuccess';
+import DSCPaymentFailed from './pages/DSCPaymentFailed';
+import MyOrders from './pages/MyOrders';
+import OrderDetails from './pages/OrderDetails';
 import IcegateDetails from './pages/IcegateDetails';
 import AdminDashboard from './pages/AdminDashboard';
 import Users from './pages/Users';
@@ -46,7 +52,6 @@ function App() {
             element={<Home onGetStarted={() => openLeadModal(null)} onLearnMore={(card) => openLeadModal({ name: card.name, slug: card.key, category: card.name })} />}
           />
           <Route path="/login" element={<Login />} />
-         <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/signup" element={<Signup />} />
@@ -95,6 +100,12 @@ function App() {
   }
 />
           <Route path="/service/dsc" element={<DSCService />} />
+          <Route path="/service/dsc/details" element={<DSCDetails />} />
+          <Route path="/service/dsc/payment" element={<DSCPayment />} />
+          <Route path="/service/dsc/order-success" element={<DSCOrderSuccess />} />
+          <Route path="/service/dsc/payment-failed" element={<DSCPaymentFailed />} />
+          <Route path="/service/dsc/orders" element={<MyOrders />} />
+          <Route path="/service/dsc/orders/:id" element={<OrderDetails />} />
           <Route path="/service/:slug" element={<ServiceDetail onEnquire={openLeadModal} />} />
           <Route path="/icegate" element={<IcegateLanding />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />

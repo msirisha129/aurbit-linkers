@@ -13,6 +13,8 @@ const serviceRoutes = require('./routes/services');
 const customsLocationRoutes = require('./routes/customsLocations');
 const userRoutes = require('./routes/users');
 
+const https = require('https');
+
 const app = express();
 
 // --- Core middleware ---
@@ -58,6 +60,83 @@ app.use('/api/leads', leadRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/customs-locations', customsLocationRoutes);
 app.use('/api/users', userRoutes);
+
+// ---- Cashfree payment order creation ----
+app.post('/api/create-order', async (req, res) => {
+  try {
+    console.log('Request body:', req.body);
+
+    const { amount, customerName, customerEmail, customerPhone } = req.body;
+
+    const orderId = 'order_' + Date.now();
+    const orderToken = 'token_' + Date.now();
+
+    const orderData = {
+      order_id: orderId,
+      order_amount: amount,
+      order_currency: 'INR',
+      customer_details: {
+        customer_id: 'cust_' + Date.now(),
+        customer_name: customerName,
+        customer_email: customerEmail,
+        customer_phone: customerPhone,
+      },
+      order_meta: {
+        return_url:
+          'http://localhost:5173/payment-success?order_id=' +
+          orderId +
+          '&order_token=' +
+          orderToken,
+      },
+    };
+
+    console.log('Cashfree API request:', JSON.stringify(orderData));
+
+    const postData = JSON.stringify(orderData);
+
+    const options = {
+      hostname: 'sandbox.cashfree.com',
+      path: '/pg/orders',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-client-id': process.env.CASHFREE_APP_ID,
+        'x-client-secret': process.env.CASHFREE_SECRET_KEY,
+        'x-api-version': '2023-08-01',
+        'Content-Length': Buffer.byteLength(postData),
+      },
+    };
+
+    const response = await new Promise((resolve, reject) => {
+      const req = https.request(options, (response) => {
+        let body = '';
+        response.on('data', (chunk) => (body += chunk));
+        response.on('end', () => {
+          try {
+            resolve({ status: response.statusCode, data: JSON.parse(body) });
+          } catch (e) {
+            resolve({ status: response.statusCode, data: body });
+          }
+        });
+      });
+
+      req.on('error', reject);
+      req.write(postData);
+      req.end();
+    });
+
+    console.log('Cashfree response status:', response.status);
+    const responseText = JSON.stringify(response.data);
+    console.log('Cashfree raw response:', responseText);
+    const data = response.data;
+    console.log('payment_session_id:', data.payment_session_id);
+
+    res.json(data);
+  } catch (error) {
+    console.error('Error creating Cashfree order:', error);
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+});
 
 // POST /api/test-email — send a diagnostic test email
 const { sendTestEmail } = require('./utils/email');

@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CheckCircle2, Phone, ShieldCheck, Zap, Lock, Headphones, Globe, FileText, Download, Video, RefreshCw, Search, Building2, ArrowRight } from 'lucide-react';
 import CTABanner from '../components/CTABanner';
 import DSCFAQ from '../components/DSCFAQ';
 
 
 export default function DSCService() {
+  const navigate = useNavigate();
   const [classType, setClassType] = useState('Class 3');
   const [userType, setUserType] = useState('Individual');
   const [certType, setCertType] = useState('Signature');
@@ -12,6 +14,7 @@ export default function DSCService() {
   const [phone, setPhone] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
 
   const price = (() => {
     const b = classType === 'DGFT' ? (userType === 'Organization' ? 1999 : 1499) : userType === 'Organization' ? 1499 : 999;
@@ -178,15 +181,42 @@ export default function DSCService() {
               </div>
 
               {/* Phone form */}
-              <form onSubmit={(e) => { e.preventDefault(); if (!phone.trim()) return; setSubmitted(true); }} className="mb-2.5">
+              <form onSubmit={(e) => { 
+                e.preventDefault(); 
+                setError('');
+                const phoneRegex = /^[6-9]\d{9}$/;
+                if (!phoneRegex.test(phone)) {
+                  setError('Please enter a valid 10-digit Indian mobile number');
+                  return;
+                }
+                setSubmitted(true);
+                navigate('/service/dsc/details', {
+                  state: {
+                    classType,
+                    userType,
+                    certificateType: certType,
+                    validity,
+                    amount: price,
+                    phone
+                  }
+                });
+              }} className="mb-2.5">
                 <div className="flex gap-1.5">
                   <div className="flex items-center gap-2 px-2.5 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-800 select-none">
                     <span className="text-base leading-none">🇮🇳</span>
                     <span className="font-semibold">+91</span>
                   </div>
-                  <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Enter mobile number" className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-md text-sm focus:border-[#C9A84C] focus:ring-2 focus:ring-[#C9A84C]/20 outline-none transition-all" />
+                  <input 
+                    type="tel" 
+                    value={phone} 
+                    onChange={(e) => { setPhone(e.target.value); setError(''); }} 
+                    placeholder="Enter mobile number" 
+                    maxLength={10}
+                    className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-md text-sm focus:border-[#C9A84C] focus:ring-2 focus:ring-[#C9A84C]/20 outline-none transition-all" 
+                  />
                 </div>
-                <button type="submit" disabled={!phone.trim()} className="w-full mt-1.5 h-[44px] rounded-lg bg-[#1a2744] text-white text-sm font-semibold hover:bg-[#15203a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">{submitting ? 'Please wait...' : 'Proceed'}</button>
+                {error && <p className="text-red-500 text-xs mt-1 mb-1">{error}</p>}
+                <button type="submit" disabled={!phone.trim()} className="w-full mt-1.5 h-[44px] rounded-lg bg-[#1a2744] text-white text-sm font-semibold hover:bg-[#15203a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Verify Mobile</button>
               </form>
 
               <p className="text-center text-xs text-slate-500">
