@@ -14,6 +14,25 @@ export default function AdminDocumentReview({
     return documents.find((doc) => doc.name === documentName);
   };
 
+  const handleView = async (docName, doc) => {
+    if (onView) {
+      onView(docName, doc);
+    } else if (doc?.url) {
+      window.open(doc.url, '_blank');
+    }
+  };
+
+  const handleDownload = async (docName, doc) => {
+    if (onDownload) {
+      onDownload(docName, doc);
+    } else if (doc?.url) {
+      const link = document.createElement('a');
+      link.href = doc.url;
+      link.download = doc.fileName || doc.name;
+      link.click();
+    }
+  };
+
   if (requiredDocuments.length === 0) {
     return (
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
@@ -40,9 +59,7 @@ export default function AdminDocumentReview({
               className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100"
             >
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="text-2xl flex-shrink-0">
-                  {uploaded ? '📄' : '📄'}
-                </div>
+                <div className="text-2xl flex-shrink-0">📄</div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-navy-900 truncate">{docName}</p>
                   {uploaded && uploadedDoc ? (
@@ -50,6 +67,11 @@ export default function AdminDocumentReview({
                       <p className="text-xs text-slate-500 mt-1 truncate">
                         {uploadedDoc.fileName || uploadedDoc.name}
                       </p>
+                      {uploadedDoc.uploadedAt && (
+                        <p className="text-xs text-slate-500 mt-1">
+                          Uploaded on {new Date(uploadedDoc.uploadedAt).toLocaleDateString('en-IN')}
+                        </p>
+                      )}
                       <p className="text-xs text-emerald-600 font-medium mt-1 flex items-center gap-1">
                         ✓ Uploaded
                       </p>
@@ -62,24 +84,20 @@ export default function AdminDocumentReview({
 
               {uploaded && (
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  {onView && (
-                    <button
-                      onClick={() => onView(docName, uploadedDoc)}
-                      className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
-                      title="View"
-                    >
-                      <Eye size={14} className="text-slate-600" />
-                    </button>
-                  )}
-                  {onDownload && (
-                    <button
-                      onClick={() => onDownload(docName, uploadedDoc)}
-                      className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
-                      title="Download"
-                    >
-                      <Download size={14} className="text-slate-600" />
-                    </button>
-                  )}
+                  <button
+                    onClick={() => handleView(docName, uploadedDoc)}
+                    className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
+                    title="View"
+                  >
+                    <Eye size={14} className="text-slate-600" />
+                  </button>
+                  <button
+                    onClick={() => handleDownload(docName, uploadedDoc)}
+                    className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
+                    title="Download"
+                  >
+                    <Download size={14} className="text-slate-600" />
+                  </button>
                 </div>
               )}
             </div>

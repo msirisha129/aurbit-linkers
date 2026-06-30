@@ -50,6 +50,9 @@ const apiLimiter = rateLimit({
 });
 app.use('/api', apiLimiter);
 
+// Serve uploaded documents
+app.use('/uploads', express.static('uploads'));
+
 // --- Routes ---
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'aurbit-linkers-api', time: new Date().toISOString() });

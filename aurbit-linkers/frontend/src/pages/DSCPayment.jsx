@@ -64,21 +64,26 @@ export default function DSCPayment() {
           sessionStorage.setItem('dsc_pending_config', JSON.stringify(config));
         } catch (e) {}
 
+        const orderId = data.order_id;
+
         const { load } = await import('@cashfreepayments/cashfree-js');
         const cashfree = await load({ mode: 'sandbox' });
 
         console.log("STEP 3 - Opening Cashfree Checkout");
         console.log('DSCPayment: Opening Cashfree checkout...');
 
-        // Open Cashfree modal — callbacks are for logging only.
+        // Open Cashfree modal — callbacks handle navigation.
         // Official confirmation happens via PaymentCallback after redirect.
         cashfree.checkout({
           paymentSessionId: data.payment_session_id,
           redirectTarget: '_modal',
           onSuccess: (result) => {
             console.log("STEP 4 - Cashfree onSuccess", result);
-            console.log('DSCPayment: onSuccess callback (logging only):', result);
-            // PaymentCallback will handle the official verification after redirect
+            console.log('DSCPayment: onSuccess callback:', result);
+            // Navigate to callback page for verification
+            navigate('/service/dsc/payment-callback?order_id=' + orderId, {
+              replace: true,
+            });
           },
           onFailure: (error) => {
             console.log("STEP 5 - Cashfree onFailure", error);

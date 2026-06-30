@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Upload, FileText, CheckCircle, XCircle, Trash2, Eye } from 'lucide-react';
+import { Upload, FileText, CheckCircle, Trash2, Eye, Download } from 'lucide-react';
 
 const ACCEPTED_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
 const MAX_SIZE_MB = 10;
@@ -10,9 +10,11 @@ export default function DocumentUploader({
   requiredDocuments = [],
   uploadedDocuments = [],
   onUpload,
+  applicationId,
 }) {
   const [uploading, setUploading] = useState({});
   const [error, setError] = useState({});
+  const [localDocuments, setLocalDocuments] = useState(uploadedDocuments);
 
   const getFileIcon = (fileType) => {
     if (fileType === 'application/pdf') return '📄';
@@ -41,32 +43,60 @@ export default function DocumentUploader({
 
     setUploading({ ...uploading, [documentName]: true });
 
-    try {
+    // Mock upload - simulate API call with timeout
+    setTimeout(() => {
+      const mockUploadedDoc = {
+        name: documentName,
+        fileName: file.name,
+        type: file.type,
+        size: file.size,
+        uploadedAt: new Date().toISOString(),
+        url: URL.createObjectURL(file),
+      };
+
+      const updatedDocuments = localDocuments.filter(doc => doc.name !== documentName);
+      updatedDocuments.push(mockUploadedDoc);
+      
+      setLocalDocuments(updatedDocuments);
+      setUploading({ ...uploading, [documentName]: false });
+      setError({ ...error, [documentName]: null });
+
       if (onUpload) {
-        await onUpload(documentName, file);
+        onUpload(documentName, file, mockUploadedDoc);
       }
-      setUploading({ ...uploading, [documentName]: false });
-    } catch (err) {
-      setError({
-        ...error,
-        [documentName]: err.message || 'Upload failed. Please try again.',
-      });
-      setUploading({ ...uploading, [documentName]: false });
-    }
+    }, 800);
   };
 
   const handleRemove = (documentName) => {
+    const updatedDocuments = localDocuments.filter(doc => doc.name !== documentName);
+    setLocalDocuments(updatedDocuments);
+
     if (onUpload) {
-      onUpload(documentName, null);
+      onUpload(documentName, null, null);
+    }
+  };
+
+  const handleView = (doc) => {
+    if (doc?.url) {
+      window.open(doc.url, '_blank');
+    }
+  };
+
+  const handleDownload = (doc) => {
+    if (doc?.url) {
+      const link = document.createElement('a');
+      link.href = doc.url;
+      link.download = doc.fileName || doc.name;
+      link.click();
     }
   };
 
   const isDocumentUploaded = (documentName) => {
-    return uploadedDocuments.some((doc) => doc.name === documentName);
+    return localDocuments.some((doc) => doc.name === documentName);
   };
 
   const getUploadedDocument = (documentName) => {
-    return uploadedDocuments.find((doc) => doc.name === documentName);
+    return localDocuments.find((doc) => doc.name === documentName);
   };
 
   if (requiredDocuments.length === 0) {
@@ -103,13 +133,24 @@ export default function DocumentUploader({
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-navy-900 truncate">{docName}</p>
                   {uploaded && uploadedDoc && (
-                    <p className="text-xs text-slate-500 mt-1 truncate">
-                      {uploadedDoc.fileName || uploadedDoc.name}
-                    </p>
+                    <>
+                      <p className="text-xs text-slate-500 mt-1 truncate">
+                        {uploadedDoc.fileName || uploadedDoc.name}
+                      </p>
+                      {uploadedDoc.uploadedAt && (
+                        <p className="text-xs text-slate-500 mt-1">
+                          Uploaded on {new Date(uploadedDoc.uploadedAt).toLocaleDateString('en-IN')}
+                        </p>
+                      )}
+                      <p className="text-xs text-emerald-600 font-medium mt-1 flex items-center gap-1">
+                        <CheckCircle size={12} />
+                        Uploaded
+                      </p>
+                    </>
                   )}
                   {hasError && (
                     <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
-                      <XCircle size={12} />
+                      <CheckCircle size={12} />
                       {hasError}
                     </p>
                   )}
@@ -119,19 +160,22 @@ export default function DocumentUploader({
               <div className="flex items-center gap-2 flex-shrink-0">
                 {uploaded ? (
                   <>
-                    <span className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
-                      <CheckCircle size={14} strokeWidth={2.5} />
-                      Uploaded
-                    </span>
-                    {uploadedDoc?.preview && (
-                      <button
-                        onClick={() => window.open(uploadedDoc.preview, '_blank')}
-                        className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
-                        title="Preview"
-                      >
-                        <Eye size={14} className="text-slate-600" />
-                      </button>
-                    )}
+                    <button
+                      onClick={() => handleView(uploadedDoc)}
+                      className="px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-xs font-semibold hover:bg-gray-50 transition-colors flex items-center gap-1"
+                      title="View"
+                    >
+                      <Eye size={14} className="text-slate-600" />
+                      View
+                    </button>
+                    <button
+                      onClick={() => handleDownload(uploadedDoc)}
+                      className="px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-xs font-semibold hover:bg-gray-50 transition-colors flex items-center gap-1"
+                      title="Download"
+                    >
+                      <Download size={14} className="text-slate-600" />
+                      Download
+                    </button>
                     <button
                       onClick={() => handleRemove(docName)}
                       className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center hover:bg-red-50 transition-colors"

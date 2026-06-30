@@ -1,6 +1,9 @@
 const express = require('express');
+const fs = require('fs');
 const DSCApplication = require('../models/DSCApplication');
 const { requireAuth } = require('../middleware/auth');
+const upload = require('../middleware/upload');
+const path = require('path');
 
 const router = express.Router();
 
@@ -142,6 +145,77 @@ router.put('/:id/status', requireAuth, async (req, res) => {
   } catch (err) {
     console.error('Error updating DSC application:', err);
     return res.status(500).json({ message: 'Could not update application.' });
+  }
+});
+
+// POST /api/dsc/applications/:id/documents — upload document
+router.post('/:id/documents', requireAuth, upload.single('file'), async (req, res) => {
+  try {
+    const { documentName } = req.body;
+    
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    if (!documentName) {
+      return res.status(400).json({ message: 'Document name is required' });
+    }
+
+    const application = await DSCApplication.findOne({ applicationId: req.params.id });
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    // Check if user owns the application or is admin
+    if (application.user && application.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied.' });
+    }
+
+    const fileUrl = `/uploads/${req.file.filename}`;
+    const newDocument = {
+      name: documentName,
+      fileName: req.file.originalname,
+      url: fileUrl,
+      filePath: path.join(__dirname, '../uploads', req.file.filename),
+      uploadedAt: new Date(),
+      status: 'Uploaded',
+    };
+
+    // Remove existing document with same name if exists
+    application.documents = application.documents.filter(doc => doc.name !== documentName);
+    application.documents.push(newDocument);
+
+    // Add timeline event
+    application.timeline.push({
+      event: `${documentName} Uploaded`,
+      date: new Date(),
+      note: `Document "${documentName}" has been uploaded.`,
+    });
+
+    await application.save();
+
+    console.log('Document uploaded:', documentName, 'for application:', application.applicationId);
+    return res.json({ message: 'Document uploaded successfully', document: newDocument, application });
+  } catch (err) {
+    console.error('Error uploading document:', err);
+    return res.status(500).json({ message: 'Could not upload document.' });
+  }
+});
+
+// GET /api/applications/documents/:documentId — serve document file
+router.get('/documents/:documentId', async (req, res) => {
+  try {
+    // This is a simplified version - in production, you'd validate access
+    const filePath = path.join(__dirname, '../uploads', req.params.documentId);
+    
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: 'Document not found' });
+    }
+
+    res.sendFile(filePath);
+  } catch (err) {
+    console.error('Error serving document:', err);
+    return res.status(500).json({ message: 'Could not retrieve document.' });
   }
 });
 

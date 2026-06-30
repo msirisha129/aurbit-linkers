@@ -34,6 +34,11 @@ export default function MyApplications() {
 
           const merged = [...dscApps, ...icegateApps];
 
+          console.log("========== MY APPLICATIONS ==========");
+          console.log("DSC count:", dscApps.length, "ICEGATE count:", icegateApps.length);
+          console.log("DSC Applications:", dscApps.map(a => ({ _id: a._id, applicationId: a.applicationId, orderId: a.orderId, service: a.service })));
+          console.log("ICEGATE Applications:", icegateApps.map(a => ({ _id: a._id, applicationId: a.applicationId, orderId: a.orderId, service: a.service })));
+
           merged.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
           setApplications(merged);

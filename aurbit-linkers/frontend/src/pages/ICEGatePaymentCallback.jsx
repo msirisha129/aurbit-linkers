@@ -13,7 +13,8 @@ export default function ICEGatePaymentCallback() {
   useEffect(() => {
     const orderId = searchParams.get('order_id');
 
-    console.log("Order ID:", orderId);
+    console.log("========== ICEGATE CALLBACK ==========");
+    console.log("Order ID From URL:", orderId);
 
     if (!orderId) {
       setStatus('error');
@@ -27,6 +28,7 @@ export default function ICEGatePaymentCallback() {
 
     // Step 1: Verify payment with Cashfree
     console.log("STEP 5 - Calling verify-payment");
+    console.log("Verifying order:", orderId);
     fetch(`${API_BASE}/verify-payment`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -41,6 +43,8 @@ export default function ICEGatePaymentCallback() {
       .then(async (verification) => {
         console.log("STEP 6 - Verify response", verification);
         console.log('ICEGateCallback: Verification result:', verification);
+        console.log("Verification order_id:", verification?.order_id);
+        console.log("Verification payment_status:", verification?.payment_status);
 
         const isSuccess =
           verification?.payment_status === 'SUCCESS' ||
@@ -82,6 +86,14 @@ export default function ICEGatePaymentCallback() {
 
         // Step 2: Save ICEGATE application to MongoDB (authenticated)
         console.log("STEP 7 - Creating ICEGATE application");
+        console.log("Application payload:", {
+          orderId: verification.order_id || orderId,
+          paymentId,
+          customerName,
+          email: customerEmail,
+          mobile: customerPhone,
+          amount: Number(verification.order_amount || 2899),
+        });
         try {
           const appResponse = await api.post('/icegate/applications', {
             orderId: verification.order_id || orderId,
@@ -93,6 +105,9 @@ export default function ICEGatePaymentCallback() {
           });
           console.log("STEP 8 - Application created", appResponse.data);
           console.log('ICEGateCallback: Application saved:', appResponse.data);
+          console.log("Created application _id:", appResponse.data?.application?._id);
+          console.log("Created application applicationId:", appResponse.data?.application?.applicationId);
+          console.log("Created application orderId:", appResponse.data?.application?.orderId);
         } catch (appErr) {
           console.warn('ICEGateCallback: Could not save application to backend:', appErr);
         }
@@ -113,6 +128,7 @@ export default function ICEGatePaymentCallback() {
 
         console.log("STEP 9 - Navigating to success");
         console.log('ICEGateCallback: Payment verified, navigating to success...');
+        console.log("Navigating with orderData:", orderData);
         navigate('/service/icegate-registration/order-success', {
           state: orderData,
           replace: true,

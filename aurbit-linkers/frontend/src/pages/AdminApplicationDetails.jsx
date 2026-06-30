@@ -19,6 +19,7 @@ export default function AdminApplicationDetails() {
 
   const [documents, setDocuments] = useState(application.documents || []);
   const [timeline, setTimeline] = useState(application.timeline || []);
+  const [localDocuments, setLocalDocuments] = useState(application.documents || []);
 
   useEffect(() => {
     if (!application._id && application.orderId) {
@@ -36,6 +37,7 @@ export default function AdminApplicationDetails() {
       const { data } = await api.get(endpoint);
       if (data.application) {
         setDocuments(data.application.documents || []);
+        setLocalDocuments(data.application.documents || []);
         setTimeline(data.application.timeline || []);
       }
     } catch (err) {
@@ -191,14 +193,25 @@ export default function AdminApplicationDetails() {
         <AdminDocumentReview
           service={application.service}
           requiredDocuments={getRequiredDocuments(application.service)}
-          documents={documents}
+          documents={localDocuments}
           onView={(docName, doc) => {
             console.log('View document:', docName, doc);
-            alert(`Viewing: ${docName}\nFile: ${doc?.fileName || doc?.name}`);
+            if (doc?.url) {
+              window.open(doc.url, '_blank');
+            } else {
+              alert(`Viewing: ${docName}\nFile: ${doc?.fileName || doc?.name}`);
+            }
           }}
           onDownload={(docName, doc) => {
             console.log('Download document:', docName, doc);
-            alert(`Downloading: ${docName}\nFile: ${doc?.fileName || doc?.name}`);
+            if (doc?.url) {
+              const link = document.createElement('a');
+              link.href = doc.url;
+              link.download = doc.fileName || doc.name;
+              link.click();
+            } else {
+              alert(`Downloading: ${docName}\nFile: ${doc?.fileName || doc?.name}`);
+            }
           }}
         />
 

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import ApplicationHeader from '../components/application/ApplicationHeader';
 import ApplicationSummaryCard from '../components/application/ApplicationSummaryCard';
@@ -10,6 +11,15 @@ export default function ApplicationDetails() {
   const location = useLocation();
   const navigate = useNavigate();
   const application = location.state || {};
+  const [documents, setDocuments] = useState(application.documents || []);
+
+  console.log("========== APPLICATION DETAILS ==========");
+  console.log("Location state:", application);
+  console.log("Application _id:", application?._id);
+  console.log("Application applicationId:", application?.applicationId);
+  console.log("Application orderId:", application?.orderId);
+  console.log("Application service:", application?.service);
+  console.log("Application user:", application?.user);
 
   if (!application.orderId) {
     return (
@@ -42,8 +52,6 @@ export default function ApplicationDetails() {
         hour: '2-digit',
         minute: '2-digit',
       });
-
-  const documents = application.documents || [];
 
   const getRequiredDocuments = (service) => {
     const serviceLower = (service || '').toLowerCase();
@@ -98,15 +106,17 @@ export default function ApplicationDetails() {
     return ['PAN Card', 'Address Proof', 'ID Proof'];
   };
 
-  const handleUpload = async (documentName, file) => {
+  const handleUpload = async (documentName, file, uploadedDoc) => {
     if (file === null) {
+      // Remove document
+      setDocuments(prev => prev.filter(doc => doc.name !== documentName));
       return;
     }
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        console.log('Mock upload:', documentName, file.name);
-        resolve();
-      }, 1000);
+    
+    // Add or update document in state
+    setDocuments(prev => {
+      const filtered = prev.filter(doc => doc.name !== documentName);
+      return [...filtered, uploadedDoc];
     });
   };
 
@@ -180,6 +190,7 @@ export default function ApplicationDetails() {
           requiredDocuments={getRequiredDocuments(application.service)}
           uploadedDocuments={documents}
           onUpload={handleUpload}
+          applicationId={application._id || application.orderId}
         />
 
         {/* 5. Application Actions */}

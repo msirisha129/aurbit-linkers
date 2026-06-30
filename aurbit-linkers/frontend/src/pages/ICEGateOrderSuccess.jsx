@@ -6,6 +6,13 @@ export default function ICEGateOrderSuccess() {
   const navigate = useNavigate();
   const order = location.state || {};
 
+  console.log("========== ICEGATE ORDER SUCCESS ==========");
+  console.log("Location state:", order);
+  console.log("Order _id:", order?._id);
+  console.log("Order applicationId:", order?.applicationId);
+  console.log("Order orderId:", order?.orderId);
+  console.log("Order service:", order?.service);
+
   if (!order.orderId) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">

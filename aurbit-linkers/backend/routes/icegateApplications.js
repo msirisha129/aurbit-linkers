@@ -1,6 +1,9 @@
 const express = require('express');
+const fs = require('fs');
 const ICEGATEApplication = require('../models/ICEGATEApplication');
 const { requireAuth } = require('../middleware/auth');
+const upload = require('../middleware/upload');
+const path = require('path');
 
 const router = express.Router();
 
@@ -16,11 +19,18 @@ router.post('/', requireAuth, async (req, res) => {
       amount,
     } = req.body;
 
+    console.log("========== ICEGATE APPLICATION CREATION ==========");
+    console.log("Request Body:", req.body);
+    console.log("Authenticated User ID:", req.user?._id);
+    console.log("User Email:", req.user?.email);
+
     if (!orderId) {
+      console.error("ERROR: orderId is missing from request body");
       return res.status(400).json({ message: 'orderId is required' });
     }
 
     const applicationId = 'ICE_' + Date.now();
+    console.log("Generated Application ID:", applicationId);
 
     const application = await ICEGATEApplication.create({
       applicationId,
@@ -49,6 +59,26 @@ router.post('/', requireAuth, async (req, res) => {
     });
 
     console.log('ICEGATE Application created:', application.applicationId);
+    console.log("MongoDB _id:", application._id);
+    console.log("MongoDB applicationId:", application.applicationId);
+    console.log("MongoDB orderId:", application.orderId);
+    console.log("MongoDB user:", application.user);
+    console.log("Response sent to frontend:", {
+      message: 'Application created successfully',
+      application: {
+        _id: application._id,
+        applicationId: application.applicationId,
+        orderId: application.orderId,
+        paymentId: application.paymentId,
+        customerName: application.customerName,
+        email: application.email,
+        mobile: application.mobile,
+        amount: application.amount,
+        paymentStatus: application.paymentStatus,
+        applicationStatus: application.applicationStatus,
+        user: application.user,
+      }
+    });
 
     return res.status(201).json({ message: 'Application created successfully', application });
   } catch (err) {
@@ -132,6 +162,60 @@ router.put('/:id/status', requireAuth, async (req, res) => {
   } catch (err) {
     console.error('Error updating ICEGATE application:', err);
     return res.status(500).json({ message: 'Could not update application.' });
+  }
+});
+
+// POST /api/icegate/applications/:id/documents — upload document
+router.post('/:id/documents', requireAuth, upload.single('file'), async (req, res) => {
+  try {
+    const { documentName } = req.body;
+    
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    if (!documentName) {
+      return res.status(400).json({ message: 'Document name is required' });
+    }
+
+    const application = await ICEGATEApplication.findOne({ applicationId: req.params.id });
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    // Check if user owns the application or is admin
+    if (application.user && application.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied.' });
+    }
+
+    const fileUrl = `/uploads/${req.file.filename}`;
+    const newDocument = {
+      name: documentName,
+      fileName: req.file.originalname,
+      url: fileUrl,
+      filePath: path.join(__dirname, '../uploads', req.file.filename),
+      uploadedAt: new Date(),
+      status: 'Uploaded',
+    };
+
+    // Remove existing document with same name if exists
+    application.documents = application.documents.filter(doc => doc.name !== documentName);
+    application.documents.push(newDocument);
+
+    // Add timeline event
+    application.timeline.push({
+      event: `${documentName} Uploaded`,
+      date: new Date(),
+      note: `Document "${documentName}" has been uploaded.`,
+    });
+
+    await application.save();
+
+    console.log('Document uploaded:', documentName, 'for application:', application.applicationId);
+    return res.json({ message: 'Document uploaded successfully', document: newDocument, application });
+  } catch (err) {
+    console.error('Error uploading document:', err);
+    return res.status(500).json({ message: 'Could not upload document.' });
   }
 });
 
