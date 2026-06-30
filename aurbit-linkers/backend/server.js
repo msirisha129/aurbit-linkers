@@ -60,6 +60,7 @@ app.use('/api/leads', leadRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/customs-locations', customsLocationRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/dsc/applications', require('./routes/dscApplications'));
 
 // ---- Cashfree payment order creation ----
 app.post('/api/create-order', async (req, res) => {

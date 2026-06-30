@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import api from '../lib/api';
 
 export default function DSCPaymentCallback() {
   const [searchParams] = useSearchParams();
@@ -20,6 +21,7 @@ export default function DSCPaymentCallback() {
 
     const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
+    // Step 1: Verify payment with Cashfree
     fetch(`${API_BASE}/verify-payment`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -31,7 +33,7 @@ export default function DSCPaymentCallback() {
         }
         return res.json();
       })
-      .then((verification) => {
+      .then(async (verification) => {
         console.log('PaymentCallback: Verification result:', verification);
 
         const isSuccess =
@@ -42,49 +44,8 @@ export default function DSCPaymentCallback() {
           verification?.status === 'PENDING' ||
           verification?.success === true;
 
-        if (isSuccess) {
-          const paymentId =
-            verification?.cf_payment_id ||
-            verification?.payment_id ||
-            verification?.reference_id ||
-            'PAY_' + Date.now();
-
-          const now = new Date();
-          const orderData = {
-            orderId: verification.order_id || orderId,
-            paymentId,
-            amount: Number(verification.order_amount || 0),
-            customerName:
-              verification?.customer_details?.customer_email ||
-              verification?.customer_details?.customer_name ||
-              'Customer',
-            mobile: verification?.customer_details?.customer_phone || '',
-            email: verification?.customer_details?.customer_email || '',
-            certificateType: 'Signature',
-            classType: 'Class 3',
-            userType: 'Individual',
-            validity: '1',
-            status: 'Paid',
-            date: now.toISOString(),
-            service: 'Digital Signature Certificate',
-          };
-
-          // Save to orders history in localStorage
-          try {
-            const existingOrders = JSON.parse(localStorage.getItem('dsc_orders') || '[]');
-            existingOrders.unshift(orderData);
-            localStorage.setItem('dsc_orders', JSON.stringify(existingOrders));
-          } catch (e) {
-            console.warn('Could not save order to localStorage:', e);
-          }
-
-          console.log('PaymentCallback: Payment verified, navigating to success...');
-          navigate('/service/dsc/order-success', {
-            state: orderData,
-            replace: true,
-          });
-        } else {
-          // Payment not successful — fetch order details from sessionStorage if available
+        if (!isSuccess) {
+          // Payment not successful
           let pendingConfig = {};
           try {
             const stored = sessionStorage.getItem('dsc_pending_config');
@@ -102,7 +63,76 @@ export default function DSCPaymentCallback() {
             },
             replace: true,
           });
+          return;
         }
+
+        // Payment is successful — build order data
+        const paymentId =
+          verification?.cf_payment_id ||
+          verification?.payment_id ||
+          verification?.reference_id ||
+          'PAY_' + Date.now();
+
+        const customerEmail =
+          verification?.customer_details?.customer_email || '';
+        const customerPhone =
+          verification?.customer_details?.customer_phone || '';
+        const customerName =
+          verification?.customer_details?.customer_name ||
+          customerEmail ||
+          'Customer';
+
+        // Step 2: Save DSC application to MongoDB (authenticated)
+        try {
+          const appResponse = await api.post('/dsc/applications', {
+            orderId: verification.order_id || orderId,
+            paymentId,
+            customerName,
+            email: customerEmail,
+            mobile: customerPhone,
+            certificateType: 'Signature',
+            classType: 'Class 3',
+            userType: 'Individual',
+            validity: '1',
+            amount: Number(verification.order_amount || 0),
+          });
+          console.log('PaymentCallback: DSC application saved:', appResponse.data);
+        } catch (appErr) {
+          // Log but don't block — the payment is already verified
+          console.warn('PaymentCallback: Could not save DSC application to backend:', appErr);
+        }
+
+        // Step 3: Also save to localStorage for MyOrders page
+        const now = new Date();
+        const orderData = {
+          orderId: verification.order_id || orderId,
+          paymentId,
+          amount: Number(verification.order_amount || 0),
+          customerName,
+          mobile: customerPhone,
+          email: customerEmail,
+          certificateType: 'Signature',
+          classType: 'Class 3',
+          userType: 'Individual',
+          validity: '1',
+          status: 'Paid',
+          date: now.toISOString(),
+          service: 'Digital Signature Certificate',
+        };
+
+        try {
+          const existingOrders = JSON.parse(localStorage.getItem('dsc_orders') || '[]');
+          existingOrders.unshift(orderData);
+          localStorage.setItem('dsc_orders', JSON.stringify(existingOrders));
+        } catch (e) {
+          console.warn('Could not save order to localStorage:', e);
+        }
+
+        console.log('PaymentCallback: Payment verified, navigating to success...');
+        navigate('/service/dsc/order-success', {
+          state: orderData,
+          replace: true,
+        });
       })
       .catch((err) => {
         console.error('PaymentCallback: Verification error:', err);
