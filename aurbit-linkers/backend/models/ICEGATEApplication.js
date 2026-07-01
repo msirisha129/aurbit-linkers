@@ -35,6 +35,10 @@ const icegateApplicationSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    paymentDate: {
+      type: Date,
+      default: null,
+    },
     paymentStatus: {
       type: String,
       enum: ['Pending', 'Paid', 'Failed', 'Refunded'],

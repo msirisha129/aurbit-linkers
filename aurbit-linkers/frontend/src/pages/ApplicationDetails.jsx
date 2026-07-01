@@ -1,25 +1,88 @@
-import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import ApplicationHeader from '../components/application/ApplicationHeader';
 import ApplicationSummaryCard from '../components/application/ApplicationSummaryCard';
 import ApplicationTimeline from '../components/application/ApplicationTimeline';
 import ApplicationActionButtons from '../components/application/ApplicationActionButtons';
 import DocumentUploader from '../components/application/DocumentUploader';
-import { FileText, Upload } from 'lucide-react';
+import api from '../lib/api';
 
 export default function ApplicationDetails() {
   const location = useLocation();
   const navigate = useNavigate();
-  const application = location.state || {};
+  const [searchParams] = useSearchParams();
+  const [application, setApplication] = useState(location.state || {});
+  const [loading, setLoading] = useState(!location.state);
   const [documents, setDocuments] = useState(application.documents || []);
 
-  console.log("========== APPLICATION DETAILS ==========");
-  console.log("Location state:", application);
-  console.log("Application _id:", application?._id);
-  console.log("Application applicationId:", application?.applicationId);
-  console.log("Application orderId:", application?.orderId);
-  console.log("Application service:", application?.service);
-  console.log("Application user:", application?.user);
+  useEffect(() => {
+    // If no state passed (page refresh or direct navigation), fetch from backend
+    if (!location.state || !location.state.orderId) {
+      const appId = searchParams.get('id') || searchParams.get('orderId') || searchParams.get('applicationId');
+      if (appId) {
+        fetchApplication(appId);
+      } else {
+        setLoading(false);
+      }
+    }
+  }, []);
+
+  const fetchApplication = async (id) => {
+    setLoading(true);
+    try {
+      // Try DSC first, then ICEGATE
+      let found = null;
+      try {
+        const { data } = await api.get(`/dsc/applications/${id}`);
+        if (data.application) found = data.application;
+      } catch (e) {
+        // Not found in DSC
+      }
+      if (!found) {
+        try {
+          const { data } = await api.get(`/icegate/applications/${id}`);
+          if (data.application) found = data.application;
+        } catch (e) {
+          // Not found in ICEGATE either
+        }
+      }
+      // Try finding by orderId or applicationId
+      if (!found) {
+        try {
+          const { data } = await api.get(`/dsc/applications/mine`);
+          const apps = data.applications || [];
+          found = apps.find(a => a.orderId === id || a.applicationId === id || a._id === id);
+        } catch (e) {}
+      }
+      if (!found) {
+        try {
+          const { data } = await api.get(`/icegate/applications/mine`);
+          const apps = data.applications || [];
+          found = apps.find(a => a.orderId === id || a.applicationId === id || a._id === id);
+        } catch (e) {}
+      }
+
+      if (found) {
+        setApplication(found);
+        setDocuments(found.documents || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch application:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="animate-spin w-10 h-10 border-4 border-[#C9A84C] border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-sm text-slate-600">Loading application details...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!application.orderId) {
     return (
@@ -37,21 +100,15 @@ export default function ApplicationDetails() {
     );
   }
 
-  const paymentDate = application.date
-    ? new Date(application.date).toLocaleDateString('en-IN', {
+  const paymentDate = (application.paymentDate || application.createdAt || application.date)
+    ? new Date(application.paymentDate || application.createdAt || application.date).toLocaleDateString('en-IN', {
         day: '2-digit',
         month: 'short',
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
       })
-    : new Date().toLocaleDateString('en-IN', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
+    : '';
 
   const getRequiredDocuments = (service) => {
     const serviceLower = (service || '').toLowerCase();

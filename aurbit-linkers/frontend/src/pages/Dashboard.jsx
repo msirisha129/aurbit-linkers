@@ -30,7 +30,7 @@ export default function Dashboard() {
   const [icegateApps, setIcegateApps] = useState([]);
 
   const handleApplicationClick = (application) => {
-    navigate('/service/application/details', { state: application });
+    navigate(`/service/application/details?id=${application._id || application.applicationId || application.orderId}`, { state: application });
   };
 
   useEffect(() => {
@@ -132,7 +132,7 @@ export default function Dashboard() {
               <h2 className="font-display text-lg text-navy-900">My Applications</h2>
             </div>
             <button
-              onClick={() => navigate('/service/application/details')}
+              onClick={() => navigate('/my-applications')}
               className="text-sm text-navy-900 font-semibold hover:text-navy-700 transition-colors"
             >
               View All Applications
@@ -193,7 +193,7 @@ export default function Dashboard() {
               {applications.length > 5 && (
                 <div className="px-7 py-4 text-center border-t border-navy-50">
                   <button
-                    onClick={() => navigate('/service/application/details')}
+                    onClick={() => navigate('/my-applications')}
                     className="text-sm text-navy-900 font-semibold hover:text-navy-700 transition-colors"
                   >
                     View All {applications.length} Applications

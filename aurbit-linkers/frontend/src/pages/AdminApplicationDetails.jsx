@@ -184,7 +184,7 @@ export default function AdminApplicationDetails() {
             service={application.service}
             amount={application.amount}
             customer={application.customerName}
-            paymentDate={application.createdAt}
+            paymentDate={application.paymentDate || application.createdAt}
             orderId={application.orderId}
           />
         </div>

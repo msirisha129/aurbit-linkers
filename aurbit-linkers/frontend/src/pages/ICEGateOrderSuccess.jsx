@@ -37,13 +37,7 @@ export default function ICEGateOrderSuccess() {
         hour: '2-digit',
         minute: '2-digit',
       })
-    : new Date().toLocaleDateString('en-IN', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
+    : '';
 
   const detailRow = (label, value) => (
     <div className="flex justify-between items-center py-2.5 border-b border-gray-100 last:border-b-0">

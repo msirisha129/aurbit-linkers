@@ -35,6 +35,7 @@ import IcegateLanding from './pages/IcegateLanding';
 import Settings from './pages/Settings';
 import PaymentSuccess from './pages/PaymentSuccess';
 import ApplicationDetails from './pages/ApplicationDetails';
+import MyApplications from './pages/MyApplications';
 
 function App() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -136,6 +137,7 @@ function App() {
           <Route path="/service/icegate-registration/order-success" element={<ICEGateOrderSuccess />} />
           <Route path="/service/icegate-registration/payment-failed" element={<ICEGatePaymentFailed />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/my-applications" element={<MyApplications />} />
           <Route path="/service/application/details" element={<ApplicationDetails />} />
 
           {/* Footer / static informational pages */}

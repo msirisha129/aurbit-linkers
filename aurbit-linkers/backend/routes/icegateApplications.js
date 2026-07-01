@@ -19,18 +19,18 @@ router.post('/', requireAuth, async (req, res) => {
       amount,
     } = req.body;
 
-    console.log("========== ICEGATE APPLICATION CREATION ==========");
-    console.log("Request Body:", req.body);
-    console.log("Authenticated User ID:", req.user?._id);
-    console.log("User Email:", req.user?.email);
-
     if (!orderId) {
-      console.error("ERROR: orderId is missing from request body");
       return res.status(400).json({ message: 'orderId is required' });
     }
 
     const applicationId = 'ICE_' + Date.now();
-    console.log("Generated Application ID:", applicationId);
+
+    console.log('========== ICEGATE APPLICATION CREATION ==========');
+    console.log('Before save - req.user._id:', req.user._id);
+    console.log('Before save - req.user.email:', req.user.email);
+    console.log('Before save - application.user (to be set):', req.user._id);
+    console.log('Before save - application.applicationId:', applicationId);
+    console.log('Before save - application.orderId:', orderId);
 
     const application = await ICEGATEApplication.create({
       applicationId,
@@ -40,6 +40,7 @@ router.post('/', requireAuth, async (req, res) => {
       email: email || '',
       mobile: mobile || '',
       amount: Number(amount) || 0,
+      paymentDate: new Date(),
       paymentStatus: 'Paid',
       applicationStatus: 'Documents Pending',
       documents: [],
@@ -58,27 +59,11 @@ router.post('/', requireAuth, async (req, res) => {
       user: req.user._id,
     });
 
-    console.log('ICEGATE Application created:', application.applicationId);
-    console.log("MongoDB _id:", application._id);
-    console.log("MongoDB applicationId:", application.applicationId);
-    console.log("MongoDB orderId:", application.orderId);
-    console.log("MongoDB user:", application.user);
-    console.log("Response sent to frontend:", {
-      message: 'Application created successfully',
-      application: {
-        _id: application._id,
-        applicationId: application.applicationId,
-        orderId: application.orderId,
-        paymentId: application.paymentId,
-        customerName: application.customerName,
-        email: application.email,
-        mobile: application.mobile,
-        amount: application.amount,
-        paymentStatus: application.paymentStatus,
-        applicationStatus: application.applicationStatus,
-        user: application.user,
-      }
-    });
+    console.log('After save - savedApplication._id:', application._id);
+    console.log('After save - savedApplication.applicationId:', application.applicationId);
+    console.log('After save - savedApplication.user:', application.user);
+    console.log('After save - savedApplication.orderId:', application.orderId);
+    console.log('===============================================');
 
     return res.status(201).json({ message: 'Application created successfully', application });
   } catch (err) {
@@ -90,7 +75,44 @@ router.post('/', requireAuth, async (req, res) => {
 // GET /api/icegate/applications/mine — logged-in user's own ICEGATE applications
 router.get('/mine', requireAuth, async (req, res) => {
   try {
+    console.log('========== ICEGATE APPLICATIONS MINE ==========');
+    console.log('req.user._id:', req.user._id);
+    console.log('req.user._id type:', typeof req.user._id);
+    console.log('req.user._id constructor:', req.user._id.constructor.name);
+    console.log('req.user.email:', req.user.email);
+    
+    const totalCount = await ICEGATEApplication.countDocuments({});
+    const userAppsCount = await ICEGATEApplication.countDocuments({ user: req.user._id });
+    
+    console.log('Total applications in collection:', totalCount);
+    console.log('Applications matching user ID:', userAppsCount);
+    
     const applications = await ICEGATEApplication.find({ user: req.user._id }).sort({ createdAt: -1 });
+    
+    console.log('Applications found for user:', applications.length);
+    
+    if (applications.length === 0 && totalCount > 0) {
+      console.log('WARNING: User has no applications but database has', totalCount, 'total applications');
+      console.log('Checking ALL applications to find user mismatch...');
+      const allApps = await ICEGATEApplication.find({}).limit(20);
+      console.log('Sample applications from database:');
+      allApps.forEach(app => {
+        const isMatch = app.user && req.user._id && app.user.toString() === req.user._id.toString();
+        console.log('Document:', {
+          _id: app._id,
+          applicationId: app.applicationId,
+          user: app.user,
+          userType: typeof app.user,
+          userConstructor: app.user?.constructor?.name,
+          orderId: app.orderId,
+          customerName: app.customerName,
+          matchesCurrentUser: isMatch
+        });
+      });
+    }
+    
+    console.log('============================================');
+    
     return res.json({ applications });
   } catch (err) {
     console.error('Error fetching ICEGATE applications:', err);

@@ -29,6 +29,13 @@ router.post('/', requireAuth, async (req, res) => {
 
     const applicationId = 'DSC_' + Date.now();
 
+    console.log('========== DSC APPLICATION CREATION ==========');
+    console.log('Before save - req.user._id:', req.user._id);
+    console.log('Before save - req.user.email:', req.user.email);
+    console.log('Before save - application.user (to be set):', req.user._id);
+    console.log('Before save - application.applicationId:', applicationId);
+    console.log('Before save - application.orderId:', orderId);
+
     const application = await DSCApplication.create({
       applicationId,
       orderId,
@@ -41,6 +48,7 @@ router.post('/', requireAuth, async (req, res) => {
       userType: userType || 'Individual',
       validity: validity || '1',
       amount: Number(amount) || 0,
+      paymentDate: new Date(),
       paymentStatus: 'Paid',
       applicationStatus: 'Documents Pending',
       documents: [],
@@ -59,7 +67,11 @@ router.post('/', requireAuth, async (req, res) => {
       user: req.user._id,
     });
 
-    console.log('DSC Application created:', application.applicationId);
+    console.log('After save - savedApplication._id:', application._id);
+    console.log('After save - savedApplication.applicationId:', application.applicationId);
+    console.log('After save - savedApplication.user:', application.user);
+    console.log('After save - savedApplication.orderId:', application.orderId);
+    console.log('===============================================');
 
     return res.status(201).json({ message: 'Application created successfully', application });
   } catch (err) {
@@ -71,7 +83,44 @@ router.post('/', requireAuth, async (req, res) => {
 // GET /api/dsc/applications/mine — logged-in user's own DSC applications
 router.get('/mine', requireAuth, async (req, res) => {
   try {
+    console.log('========== DSC APPLICATIONS MINE ==========');
+    console.log('req.user._id:', req.user._id);
+    console.log('req.user._id type:', typeof req.user._id);
+    console.log('req.user._id constructor:', req.user._id.constructor.name);
+    console.log('req.user.email:', req.user.email);
+    
+    const totalCount = await DSCApplication.countDocuments({});
+    const userAppsCount = await DSCApplication.countDocuments({ user: req.user._id });
+    
+    console.log('Total applications in collection:', totalCount);
+    console.log('Applications matching user ID:', userAppsCount);
+    
     const applications = await DSCApplication.find({ user: req.user._id }).sort({ createdAt: -1 });
+    
+    console.log('Applications found for user:', applications.length);
+    
+    if (applications.length === 0 && totalCount > 0) {
+      console.log('WARNING: User has no applications but database has', totalCount, 'total applications');
+      console.log('Checking ALL applications to find user mismatch...');
+      const allApps = await DSCApplication.find({}).limit(20);
+      console.log('Sample applications from database:');
+      allApps.forEach(app => {
+        const isMatch = app.user && req.user._id && app.user.toString() === req.user._id.toString();
+        console.log('Document:', {
+          _id: app._id,
+          applicationId: app.applicationId,
+          user: app.user,
+          userType: typeof app.user,
+          userConstructor: app.user?.constructor?.name,
+          orderId: app.orderId,
+          customerName: app.customerName,
+          matchesCurrentUser: isMatch
+        });
+      });
+    }
+    
+    console.log('============================================');
+    
     return res.json({ applications });
   } catch (err) {
     console.error('Error fetching DSC applications:', err);

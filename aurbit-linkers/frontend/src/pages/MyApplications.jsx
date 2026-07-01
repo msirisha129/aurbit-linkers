@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, ArrowLeft, Eye } from 'lucide-react';
+import { FileText, ArrowLeft, Eye, CheckCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../lib/api';
 import ApplicationStatusBadge from '../components/application/ApplicationStatusBadge';
@@ -60,7 +60,7 @@ export default function MyApplications() {
   }, []);
 
   const handleApplicationClick = (application) => {
-    navigate('/service/application/details', { state: application });
+    navigate(`/service/application/details?id=${application._id || application.applicationId || application.orderId}`, { state: application });
   };
 
   return (
